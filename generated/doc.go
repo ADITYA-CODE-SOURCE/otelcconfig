@@ -1,7 +1,8 @@
 // Copyright The otelcconfig Authors
 // SPDX-License-Identifier: Apache-2.0
 
-// Package generated is a placeholder for committed code-generation output.
+// Package generated is a temporary Phase 0 placeholder for committed
+// code-generation output.
 //
 // Phase 0: empty.
 // Phase 1: types, defaults, env mappings, schema fragments, and catalogs

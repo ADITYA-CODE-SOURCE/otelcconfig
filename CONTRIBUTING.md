@@ -28,6 +28,10 @@ Requirements:
 - Go 1.25 or newer
 - Optional: [golangci-lint](https://golangci-lint.run)
 
+`make check` does not edit source files. Use `make fmt` and `make tidy` before
+checking when formatting or module metadata needs an update. `make lint` fails
+if `golangci-lint` is not installed; CI always runs a pinned linter version.
+
 ## Workflow
 
 1. Open a GitHub issue describing the change.

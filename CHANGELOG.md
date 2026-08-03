@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Hardened CI with Go 1.25/current stable and Linux/macOS/Windows coverage
+- Added race-detector and pinned golangci-lint checks
+- Made `make check` non-mutating and added module-tidiness verification
+- Strengthened CLI tests to assert stdout, stderr, and exit status
+- Clarified honest LFX resume wording and independent contributor status
+
 ## [0.1.0] — 2026-08-03
 
 ### Added
