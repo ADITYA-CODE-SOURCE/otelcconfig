@@ -5,9 +5,16 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 	"testing"
 )
+
+type failingWriter struct{}
+
+func (failingWriter) Write([]byte) (int, error) {
+	return 0, errors.New("test write failure")
+}
 
 func runCommand(args ...string) (int, string, string) {
 	var stdout, stderr bytes.Buffer
@@ -74,6 +81,16 @@ func TestRunNotImplemented(t *testing.T) {
 		if stdout != "" || !strings.Contains(stderr, "not implemented in Phase 0") {
 			t.Fatalf("%s stdout=%q stderr=%q", cmd, stdout, stderr)
 		}
+	}
+}
+
+func TestRunReportsOutputFailure(t *testing.T) {
+	var stderr bytes.Buffer
+	if code := run([]string{"version"}, failingWriter{}, &stderr); code != 1 {
+		t.Fatalf("version with failing output exit code = %d, want 1", code)
+	}
+	if !strings.Contains(stderr.String(), "test write failure") {
+		t.Fatalf("stderr = %q, want write error", stderr.String())
 	}
 }
 

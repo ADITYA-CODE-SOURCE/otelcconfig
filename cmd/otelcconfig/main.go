@@ -23,8 +23,7 @@ func main() {
 
 func run(args []string, stdout, stderr io.Writer) int {
 	if len(args) == 0 {
-		printUsage(stdout)
-		return 0
+		return writeUsage(stdout, stderr)
 	}
 
 	cmd := args[0]
@@ -32,25 +31,47 @@ func run(args []string, stdout, stderr io.Writer) int {
 
 	switch cmd {
 	case "version", "--version", "-v":
-		fmt.Fprintf(stdout, "otelcconfig version %s\n", version)
+		if _, err := fmt.Fprintf(stdout, "otelcconfig version %s\n", version); err != nil {
+			reportWriteError(stderr, err)
+			return 1
+		}
 		return 0
 	case "help", "--help", "-h":
-		printUsage(stdout)
-		return 0
+		return writeUsage(stdout, stderr)
 	case "generate", "validate", "resolve", "explain", "catalog", "diff", "bake", "guard":
 		return notImplemented(cmd, rest, stderr)
 	default:
-		fmt.Fprintf(stderr, "unknown command %q\n\n", cmd)
-		printUsage(stderr)
+		if _, err := fmt.Fprintf(stderr, "unknown command %q\n\n", cmd); err != nil {
+			return 1
+		}
+		if err := printUsage(stderr); err != nil {
+			return 1
+		}
 		return 2
 	}
 }
 
 func notImplemented(cmd string, _ []string, stderr io.Writer) int {
 	phase := phaseFor(cmd)
-	fmt.Fprintf(stderr, "command %q is not implemented in Phase 0 (planned: %s)\n", cmd, phase)
-	fmt.Fprintln(stderr, "See docs/architecture.md and the README roadmap.")
+	if _, err := fmt.Fprintf(stderr, "command %q is not implemented in Phase 0 (planned: %s)\n", cmd, phase); err != nil {
+		return 1
+	}
+	if _, err := fmt.Fprintln(stderr, "See docs/architecture.md and the README roadmap."); err != nil {
+		return 1
+	}
 	return 1
+}
+
+func writeUsage(stdout, stderr io.Writer) int {
+	if err := printUsage(stdout); err != nil {
+		reportWriteError(stderr, err)
+		return 1
+	}
+	return 0
+}
+
+func reportWriteError(stderr io.Writer, err error) {
+	_, _ = fmt.Fprintf(stderr, "write output: %v\n", err)
 }
 
 func phaseFor(cmd string) string {
@@ -68,8 +89,8 @@ func phaseFor(cmd string) string {
 	}
 }
 
-func printUsage(w io.Writer) {
-	fmt.Fprint(w, strings.TrimSpace(`
+func printUsage(w io.Writer) error {
+	_, err := fmt.Fprint(w, strings.TrimSpace(`
 otelcconfig — Declarative Configuration Toolkit for otelc
 
 Independent prototype exploring OpenTelemetry Go Compile Instrumentation Issue #705.
@@ -98,4 +119,5 @@ Examples:
 
 Docs: https://github.com/ADITYA-CODE-SOURCE/otelcconfig
 `)+"\n")
+	return err
 }
