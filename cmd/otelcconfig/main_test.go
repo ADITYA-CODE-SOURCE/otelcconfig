@@ -16,6 +16,19 @@ func (failingWriter) Write([]byte) (int, error) {
 	return 0, errors.New("test write failure")
 }
 
+type failOnWrite struct {
+	call int
+	fail int
+}
+
+func (w *failOnWrite) Write(p []byte) (int, error) {
+	w.call++
+	if w.call == w.fail {
+		return 0, errors.New("test write failure")
+	}
+	return len(p), nil
+}
+
 func runCommand(args ...string) (int, string, string) {
 	var stdout, stderr bytes.Buffer
 	code := run(args, &stdout, &stderr)
@@ -91,6 +104,40 @@ func TestRunReportsOutputFailure(t *testing.T) {
 	}
 	if !strings.Contains(stderr.String(), "test write failure") {
 		t.Fatalf("stderr = %q, want write error", stderr.String())
+	}
+}
+
+func TestRunReportsHelpOutputFailure(t *testing.T) {
+	var stderr bytes.Buffer
+	if code := run([]string{"help"}, failingWriter{}, &stderr); code != 1 {
+		t.Fatalf("help with failing output exit code = %d, want 1", code)
+	}
+	if !strings.Contains(stderr.String(), "test write failure") {
+		t.Fatalf("stderr = %q, want write error", stderr.String())
+	}
+}
+
+func TestRunHandlesUnknownCommandOutputFailure(t *testing.T) {
+	if code := run([]string{"nope"}, &bytes.Buffer{}, failingWriter{}); code != 1 {
+		t.Fatalf("unknown with failing stderr exit code = %d, want 1", code)
+	}
+}
+
+func TestRunHandlesUnknownCommandUsageFailure(t *testing.T) {
+	stderr := &failOnWrite{fail: 2}
+	if code := run([]string{"nope"}, &bytes.Buffer{}, stderr); code != 1 {
+		t.Fatalf("unknown with failing usage exit code = %d, want 1", code)
+	}
+}
+
+func TestRunHandlesNotImplementedOutputFailure(t *testing.T) {
+	if code := run([]string{"generate"}, &bytes.Buffer{}, failingWriter{}); code != 1 {
+		t.Fatalf("generate with failing stderr exit code = %d, want 1", code)
+	}
+
+	stderr := &failOnWrite{fail: 2}
+	if code := run([]string{"generate"}, &bytes.Buffer{}, stderr); code != 1 {
+		t.Fatalf("generate with failing second write exit code = %d, want 1", code)
 	}
 }
 
