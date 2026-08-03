@@ -11,19 +11,30 @@ permissions:
 
 jobs:
   check:
-    name: Build and test
-    runs-on: ubuntu-latest
+    name: Go ${{ matrix.go }} / ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ["1.25.x", "stable"]
+        os: [ubuntu-latest]
+        include:
+          - go: "stable"
+            os: macos-latest
+          - go: "stable"
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
-          go-version: "1.25.x"
+          go-version: ${{ matrix.go }}
           cache: true
 
       - name: Format check
+        if: runner.os == 'Linux' && matrix.go == '1.25.x'
         run: |
           unformatted=$(gofmt -l $(find . -name '*.go' -not -path './.git/*'))
           if [ -n "$unformatted" ]; then
@@ -38,15 +49,43 @@ jobs:
       - name: Test
         run: go test ./...
 
+      - name: Race test
+        if: runner.os == 'Linux' && matrix.go == '1.25.x'
+        run: go test -race ./...
+
       - name: Build
-        run: go build -o otelcconfig ./cmd/otelcconfig
+        run: go build -ldflags "-X main.version=ci" -o otelcconfig ./cmd/otelcconfig
 
       - name: CLI smoke
+        if: runner.os != 'Windows'
         run: |
-          ./otelcconfig version
+          test "$(./otelcconfig version)" = "otelcconfig version ci"
           ./otelcconfig help
           # Planned commands must fail honestly in Phase 0
           if ./otelcconfig generate; then
             echo "generate should not succeed in Phase 0"
             exit 1
           fi
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: "1.25.x"
+          cache: true
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.4.0
+
+      - name: Check module files are tidy
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum

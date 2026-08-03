@@ -73,15 +73,24 @@ Issue #705 proposes adopting the OpenTelemetry
 Phase 0 ships a professional skeleton, ADRs, architecture docs, CI, and a CLI that reports
 honest "not implemented" messages. No configuration or generation claims are made yet.
 
+> **Resume status:** Phase 0 is a public foundation, not a completed portfolio project.
+> List `otelcconfig` as a substantial LFX project only after the Phase 3 typed-runtime
+> demonstration and end-to-end tests are complete. Phase 1–2 may be listed as "in progress."
+
 ## Quick start (Phase 0)
 
 ```bash
 git clone https://github.com/ADITYA-CODE-SOURCE/otelcconfig.git
 cd otelcconfig
 make check
-go run ./cmd/otelcconfig version
+make build VERSION=v0.1.0
+./otelcconfig version
 go run ./cmd/otelcconfig --help
 ```
+
+`make check` is intentionally non-mutating: it fails on unformatted sources or
+untidy module files instead of silently rewriting them. Run `make fmt` and
+`make tidy` explicitly when needed. `make lint` requires `golangci-lint`.
 
 ## Planned CLI (later phases)
 
@@ -119,6 +128,19 @@ Key decisions are recorded as ADRs under [docs/adr/](docs/adr/):
 - Inventing config keys outside the OTel declarative configuration model
 - Replacing otelc's Weaver emission registry
 - Direct patches to otelc's compiler pipeline in this repository
+
+## LFX application positioning
+
+When this project reaches Phase 3, describe it accurately as:
+
+> An independent Go prototype exploring the mechanism proposed in otelc Issue #705,
+> with manifest-driven generation, declarative validation, backward-compatible
+> resolution, and typed runtime hooks.
+
+Do not claim that this repository implements Issue #705 upstream, is accepted by
+OpenTelemetry maintainers, or is an official OpenTelemetry contribution. Upstream
+contributor status comes from accepted participation in the upstream project; owning
+this independent repository does not by itself make the author an OpenTelemetry contributor.
 
 ## Contributing
 

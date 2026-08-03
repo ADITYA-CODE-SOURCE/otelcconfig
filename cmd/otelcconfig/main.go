@@ -9,20 +9,21 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 )
 
-// version is the CLI version string. Overridden at release tag time if needed.
-const version = "0.1.0"
+// version is set by -ldflags when building a release.
+var version = "dev"
 
 func main() {
-	os.Exit(run(os.Args[1:]))
+	os.Exit(run(os.Args[1:], os.Stdout, os.Stderr))
 }
 
-func run(args []string) int {
+func run(args []string, stdout, stderr io.Writer) int {
 	if len(args) == 0 {
-		printUsage(os.Stdout)
+		printUsage(stdout)
 		return 0
 	}
 
@@ -31,24 +32,24 @@ func run(args []string) int {
 
 	switch cmd {
 	case "version", "--version", "-v":
-		fmt.Printf("otelcconfig version %s\n", version)
+		fmt.Fprintf(stdout, "otelcconfig version %s\n", version)
 		return 0
 	case "help", "--help", "-h":
-		printUsage(os.Stdout)
+		printUsage(stdout)
 		return 0
 	case "generate", "validate", "resolve", "explain", "catalog", "diff", "bake", "guard":
-		return notImplemented(cmd, rest)
+		return notImplemented(cmd, rest, stderr)
 	default:
-		fmt.Fprintf(os.Stderr, "unknown command %q\n\n", cmd)
-		printUsage(os.Stderr)
+		fmt.Fprintf(stderr, "unknown command %q\n\n", cmd)
+		printUsage(stderr)
 		return 2
 	}
 }
 
-func notImplemented(cmd string, _ []string) int {
+func notImplemented(cmd string, _ []string, stderr io.Writer) int {
 	phase := phaseFor(cmd)
-	fmt.Fprintf(os.Stderr, "command %q is not implemented in Phase 0 (planned: %s)\n", cmd, phase)
-	fmt.Fprintf(os.Stderr, "See docs/architecture.md and the README roadmap.\n")
+	fmt.Fprintf(stderr, "command %q is not implemented in Phase 0 (planned: %s)\n", cmd, phase)
+	fmt.Fprintln(stderr, "See docs/architecture.md and the README roadmap.")
 	return 1
 }
 
@@ -67,7 +68,7 @@ func phaseFor(cmd string) string {
 	}
 }
 
-func printUsage(w *os.File) {
+func printUsage(w io.Writer) {
 	fmt.Fprint(w, strings.TrimSpace(`
 otelcconfig — Declarative Configuration Toolkit for otelc
 
