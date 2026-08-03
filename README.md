@@ -64,7 +64,7 @@ Issue #705 proposes adopting the OpenTelemetry
 
 | Phase | Release | Status |
 |-------|---------|--------|
-| 0 — Foundation | `v0.1.0` | **Current** |
+| 0 — Foundation | `v0.1.1` | **Current** |
 | 1 — Manifest + codegen | `v0.2.0` | Planned |
 | 2 — Validate + resolve | `v0.3.0` | Planned |
 | 3 — Typed runtime demo + RFC | `v0.4.0` | Planned |
@@ -83,7 +83,7 @@ honest "not implemented" messages. No configuration or generation claims are mad
 git clone https://github.com/ADITYA-CODE-SOURCE/otelcconfig.git
 cd otelcconfig
 make check
-make build VERSION=v0.1.0
+make build VERSION=v0.1.1
 ./otelcconfig version
 go run ./cmd/otelcconfig --help
 ```
