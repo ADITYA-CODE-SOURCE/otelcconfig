@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] — 2026-08-03
+
 ### Changed
 
 - Hardened CI with Go 1.25/current stable and Linux/macOS/Windows coverage
@@ -35,5 +37,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Phase 0 only. No configuration loading, code generation, or resolution yet.
 - Next: Phase 1 — behavior manifest and deterministic code generation (`v0.2.0`).
 
-[Unreleased]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/releases/tag/v0.1.0
