@@ -26,23 +26,31 @@ func runGenerate(args []string, stdout, stderr io.Writer) int {
 		return 2
 	}
 	if fs.NArg() != 0 {
-		fmt.Fprintf(stderr, "generate: unexpected arguments: %v\n", fs.Args())
+		if writeErrf(stderr, "generate: unexpected arguments: %v\n", fs.Args()) != nil {
+			return 1
+		}
 		return 2
 	}
 
 	manifests, err := manifest.Discover(*manifestDir)
 	if err != nil {
-		fmt.Fprintf(stderr, "generate: %v\n", err)
+		if writeErrf(stderr, "generate: %v\n", err) != nil {
+			return 1
+		}
 		return 1
 	}
 	if len(manifests) == 0 {
-		fmt.Fprintf(stderr, "generate: no manifests found under %s\n", *manifestDir)
+		if writeErrf(stderr, "generate: no manifests found under %s\n", *manifestDir) != nil {
+			return 1
+		}
 		return 1
 	}
 
 	outputs, err := codegen.GenerateAll(manifests)
 	if err != nil {
-		fmt.Fprintf(stderr, "generate: %v\n", err)
+		if writeErrf(stderr, "generate: %v\n", err) != nil {
+			return 1
+		}
 		return 1
 	}
 
@@ -50,13 +58,19 @@ func runGenerate(args []string, stdout, stderr io.Writer) int {
 		return checkOutputs(outputs, *outputDir, stdout, stderr)
 	}
 	if err := writeOutputs(outputs, *outputDir); err != nil {
-		fmt.Fprintf(stderr, "generate: %v\n", err)
+		if writeErrf(stderr, "generate: %v\n", err) != nil {
+			return 1
+		}
 		return 1
 	}
 	for _, m := range manifests {
-		fmt.Fprintf(stdout, "generated %s\n", m.Instrumentation.Name)
+		if err := writeErrf(stdout, "generated %s\n", m.Instrumentation.Name); err != nil {
+			return 1
+		}
 	}
-	fmt.Fprintf(stdout, "generated %d artifacts under %s\n", len(outputs), *outputDir)
+	if err := writeErrf(stdout, "generated %d artifacts under %s\n", len(outputs), *outputDir); err != nil {
+		return 1
+	}
 	return 0
 }
 
@@ -87,14 +101,22 @@ func checkOutputs(outputs codegen.Outputs, outputDir string, stdout, stderr io.W
 		}
 	}
 	if len(drifted) > 0 {
-		fmt.Fprintf(stderr, "generate --check: %d artifact(s) drifted:\n", len(drifted))
-		for _, d := range drifted {
-			fmt.Fprintf(stderr, "  - %s\n", d)
+		if err := writeErrf(stderr, "generate --check: %d artifact(s) drifted:\n", len(drifted)); err != nil {
+			return 1
 		}
-		fmt.Fprintln(stderr, "run `otelcconfig generate` and commit the regenerated files")
+		for _, d := range drifted {
+			if err := writeErrf(stderr, "  - %s\n", d); err != nil {
+				return 1
+			}
+		}
+		if err := writeErrf(stderr, "run `otelcconfig generate` and commit the regenerated files\n"); err != nil {
+			return 1
+		}
 		return 1
 	}
-	fmt.Fprintf(stdout, "generate --check: %d artifact(s) up to date\n", len(outputs))
+	if err := writeErrf(stdout, "generate --check: %d artifact(s) up to date\n", len(outputs)); err != nil {
+		return 1
+	}
 	return 0
 }
 
@@ -105,4 +127,9 @@ func sortedPaths(outputs codegen.Outputs) []string {
 	}
 	sort.Strings(paths)
 	return paths
+}
+
+func writeErrf(w io.Writer, format string, args ...any) error {
+	_, err := fmt.Fprintf(w, format, args...)
+	return err
 }
