@@ -22,7 +22,18 @@ Gaps are staged here instead of inventing unofficial keys that look official.
 
 ## Current gaps
 
-_None yet — Phase 0 has no manifests._
+### `go.nethttp.client.enabled` — per-instrumentation enable (Phase 1)
 
-Phase 1 will add the first net/http behavior manifest and update this file if
-any temporary `go:`-only options are required beyond official `general.*` keys.
+The net/http behavior manifest declares `enabled` under the prototype-owned `go:`
+map because no cross-language `instrumentation/development` key expresses "this
+instrumentation is enabled". The official schema models stability versions and
+`general.*` runtime behavior, not per-instrumentation enablement.
+
+- **Why it is needed:** otelc today enables instrumentations via the
+  `OTEL_GO_ENABLED_INSTRUMENTATIONS` / `OTEL_GO_DISABLED_INSTRUMENTATIONS` env vars.
+  A declarative equivalent belongs in the config file.
+- **Where it lives:** `go.nethttp.client.enabled` (open `go:` map).
+- **Stability:** `stable` — it mirrors the existing otelc runtime enable surface via
+  `csv_contains` semantics, so it is compatibility-safe in the MVP.
+- **Cross-language proposal:** possible as a `general.*` key, but out of scope for
+  Phase 1; record here until upstream takes it up.

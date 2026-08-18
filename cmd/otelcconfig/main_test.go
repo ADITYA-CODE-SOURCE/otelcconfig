@@ -86,12 +86,12 @@ func TestRunUnknown(t *testing.T) {
 }
 
 func TestRunNotImplemented(t *testing.T) {
-	for _, cmd := range []string{"generate", "validate", "resolve", "explain", "catalog", "diff", "bake", "guard"} {
+	for _, cmd := range []string{"validate", "resolve", "explain", "catalog", "diff", "bake", "guard"} {
 		code, stdout, stderr := runCommand(cmd)
 		if code != 1 {
 			t.Fatalf("%s exit code = %d, want 1", cmd, code)
 		}
-		if stdout != "" || !strings.Contains(stderr, "not implemented in Phase 0") {
+		if stdout != "" || !strings.Contains(stderr, "not implemented (planned:") {
 			t.Fatalf("%s stdout=%q stderr=%q", cmd, stdout, stderr)
 		}
 	}
@@ -131,13 +131,13 @@ func TestRunHandlesUnknownCommandUsageFailure(t *testing.T) {
 }
 
 func TestRunHandlesNotImplementedOutputFailure(t *testing.T) {
-	if code := run([]string{"generate"}, &bytes.Buffer{}, failingWriter{}); code != 1 {
-		t.Fatalf("generate with failing stderr exit code = %d, want 1", code)
+	if code := run([]string{"validate"}, &bytes.Buffer{}, failingWriter{}); code != 1 {
+		t.Fatalf("validate with failing stderr exit code = %d, want 1", code)
 	}
 
 	stderr := &failOnWrite{fail: 2}
-	if code := run([]string{"generate"}, &bytes.Buffer{}, stderr); code != 1 {
-		t.Fatalf("generate with failing second write exit code = %d, want 1", code)
+	if code := run([]string{"validate"}, &bytes.Buffer{}, stderr); code != 1 {
+		t.Fatalf("validate with failing second write exit code = %d, want 1", code)
 	}
 }
 

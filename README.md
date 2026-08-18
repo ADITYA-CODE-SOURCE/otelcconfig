@@ -11,7 +11,7 @@ Declarative Configuration Toolkit for [otelc](https://github.com/open-telemetry/
 [![CI](https://github.com/ADITYA-CODE-SOURCE/otelcconfig/actions/workflows/ci.yml/badge.svg)](https://github.com/ADITYA-CODE-SOURCE/otelcconfig/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Go Reference](https://pkg.go.dev/badge/github.com/ADITYA-CODE-SOURCE/otelcconfig.svg)](https://pkg.go.dev/github.com/ADITYA-CODE-SOURCE/otelcconfig)
-[![Status](https://img.shields.io/badge/status-phase%200%20foundation-yellow)](https://github.com/ADITYA-CODE-SOURCE/otelcconfig/releases)
+[![Status](https://img.shields.io/badge/status-phase%201%20codegen-blue)](https://github.com/ADITYA-CODE-SOURCE/otelcconfig/releases)
 
 ## What this project is
 
@@ -64,38 +64,49 @@ Issue #705 proposes adopting the OpenTelemetry
 
 | Phase | Release | Status |
 |-------|---------|--------|
-| 0 — Foundation | `v0.1.1` | **Current** |
-| 1 — Manifest + codegen | `v0.2.0` | Planned |
+| 0 — Foundation | `v0.1.1` | Done |
+| 1 — Manifest + codegen | `v0.2.0` | **Current** |
 | 2 — Validate + resolve | `v0.3.0` | Planned |
 | 3 — Typed runtime demo + RFC | `v0.4.0` | Planned |
 | 4 — Static-analysis guard | `v0.5.0` | Stretch |
 
-Phase 0 ships a professional skeleton, ADRs, architecture docs, CI, and a CLI that reports
-honest "not implemented" messages. No configuration or generation claims are made yet.
+Phase 1 ships the first behavior manifest (`manifest/nethttp/metadata.yaml`) and a
+deterministic code-generation pipeline. `otelcconfig generate` derives typed structs,
+defaults, env-var mappings, a JSON Schema fragment, and a Markdown catalog; committed
+outputs are golden-tested and CI fails on drift via `generate --check`.
 
-> **Resume status:** Phase 0 is a public foundation, not a completed portfolio project.
-> List `otelcconfig` as a substantial LFX project only after the Phase 3 typed-runtime
-> demonstration and end-to-end tests are complete. Phase 1–2 may be listed as "in progress."
+> **Resume status:** Phase 1 is a public foundation with real architecture signal, not a
+> completed portfolio project. List `otelcconfig` as a substantial LFX project only after
+> the Phase 3 typed-runtime demonstration and end-to-end tests are complete. Phase 1–2
+> may be listed as "in progress."
 
-## Quick start (Phase 0)
+## Quick start (Phase 1)
 
 ```bash
 git clone https://github.com/ADITYA-CODE-SOURCE/otelcconfig.git
 cd otelcconfig
 make check
-make build VERSION=v0.1.1
+make build VERSION=v0.2.0
 ./otelcconfig version
-go run ./cmd/otelcconfig --help
+go run ./cmd/otelcconfig generate       # regenerate derived artifacts
+go run ./cmd/otelcconfig generate --check  # verify committed artifacts are current
 ```
 
 `make check` is intentionally non-mutating: it fails on unformatted sources or
 untidy module files instead of silently rewriting them. Run `make fmt` and
 `make tidy` explicitly when needed. `make lint` requires `golangci-lint`.
 
-## Planned CLI (later phases)
+## CLI
+
+Implemented:
 
 ```text
-otelcconfig generate   # Phase 1 — generate types, defaults, schema, docs
+otelcconfig generate   # Phase 1 — generate types, defaults, schema, docs (--check for drift)
+```
+
+Planned (later phases):
+
+```text
 otelcconfig validate   # Phase 2 — validate user YAML against generated schema
 otelcconfig resolve    # Phase 2 — show final values and sources
 otelcconfig explain    # Phase 2 — explain one option

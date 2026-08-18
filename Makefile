@@ -1,7 +1,7 @@
 # Copyright The otelcconfig Authors
 # SPDX-License-Identifier: Apache-2.0
 
-.PHONY: all build test test-race coverage lint vet fmt fmt-check tidy tidy-check generate check clean help
+.PHONY: all build test test-race coverage lint vet fmt fmt-check tidy tidy-check generate generate-check check clean help
 
 MODULE := github.com/ADITYA-CODE-SOURCE/otelcconfig
 BIN    := otelcconfig
@@ -53,11 +53,13 @@ tidy-check: ## Fail if go.mod or go.sum is not tidy
 	$(GO) mod tidy
 	@git diff --exit-code -- go.mod go.sum
 
-generate: ## Run code generation (Phase 1+)
-	@echo "codegen not implemented in Phase 0; see docs/architecture.md"
-	@$(GO) generate ./...
+generate: ## Regenerate committed artifacts from behavior manifests
+	$(GO) run ./cmd/otelcconfig generate
 
-check: fmt-check tidy-check vet test build ## Run non-mutating format, module, vet, test, and build checks
+generate-check: ## Fail if committed artifacts drift from behavior manifests
+	$(GO) run ./cmd/otelcconfig generate --check
+
+check: fmt-check tidy-check vet test generate-check build ## Run non-mutating format, module, vet, test, generate drift, and build checks
 	@echo "✓ check passed"
 
 clean: ## Remove build artifacts
