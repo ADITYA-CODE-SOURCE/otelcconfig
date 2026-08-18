@@ -3,8 +3,8 @@
 
 // Command otelcconfig is the CLI entrypoint for the otelcconfig toolkit.
 //
-// Phase 0 provides version/help and honest stubs for later-phase commands.
-// See docs/architecture.md for the full roadmap.
+// Phase 1 implements `generate`; remaining commands are honest stubs for
+// later phases. See docs/architecture.md for the full roadmap.
 package main
 
 import (
@@ -38,7 +38,9 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return 0
 	case "help", "--help", "-h":
 		return writeUsage(stdout, stderr)
-	case "generate", "validate", "resolve", "explain", "catalog", "diff", "bake", "guard":
+	case "generate":
+		return runGenerate(rest, stdout, stderr)
+	case "validate", "resolve", "explain", "catalog", "diff", "bake", "guard":
 		return notImplemented(cmd, rest, stderr)
 	default:
 		if _, err := fmt.Fprintf(stderr, "unknown command %q\n\n", cmd); err != nil {
@@ -52,8 +54,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 }
 
 func notImplemented(cmd string, _ []string, stderr io.Writer) int {
-	phase := phaseFor(cmd)
-	if _, err := fmt.Fprintf(stderr, "command %q is not implemented in Phase 0 (planned: %s)\n", cmd, phase); err != nil {
+	if _, err := fmt.Fprintf(stderr, "command %q is not implemented (planned: %s)\n", cmd, phaseFor(cmd)); err != nil {
 		return 1
 	}
 	if _, err := fmt.Fprintln(stderr, "See docs/architecture.md and the README roadmap."); err != nil {
@@ -102,9 +103,9 @@ Usage:
 Commands:
   version     Print version and exit
   help        Show this help
+  generate    Generate types, defaults, env map, schema, and docs from manifests
 
-Planned (not implemented in Phase 0):
-  generate    Generate types, defaults, schema, and docs from manifests   [Phase 1]
+Planned (not implemented):
   validate    Validate a declarative configuration file                 [Phase 2]
   resolve     Show resolved values and their sources                    [Phase 2]
   explain     Explain one configuration option                          [Phase 2]
@@ -113,9 +114,15 @@ Planned (not implemented in Phase 0):
   guard       Reject undeclared configuration access                    [Phase 4]
   diff        Compare two configuration files                           [Phase 4]
 
+Generate flags:
+  --manifest <dir>   Behavior manifests directory (default ./manifest)
+  --output <dir>     Generated artifacts directory (default ./generated)
+  --check            Verify committed outputs are up to date without writing
+
 Examples:
   otelcconfig version
-  otelcconfig help
+  otelcconfig generate
+  otelcconfig generate --check
 
 Docs: https://github.com/ADITYA-CODE-SOURCE/otelcconfig
 `)+"\n")

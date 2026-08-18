@@ -94,22 +94,27 @@ This matches the Issue #705 design note:
 Phase 3 models bake-in as a standalone `otelcconfig bake` command. It is **not**
 wired into otelc's `-toolexec` pipeline.
 
-## Official keys used in the first instrumentation (planned)
+## Official keys used in the first instrumentation
 
-For net/http client demonstration:
+For net/http client demonstration (`manifest/nethttp/metadata.yaml`, Phase 1):
 
 | Option | Declarative path | Origin |
 |--------|------------------|--------|
-| Enabled | `go.nethttp.enabled` | Prototype-owned (`go:` open map) |
+| Enabled | `go.nethttp.client.enabled` | Prototype-owned (`go:` open map) |
 | Request captured headers | `general.http.client.request_captured_headers` | Official OTel schema |
 | Sensitive query parameters | `general.sanitization.url.sensitive_query_parameters` | Official OTel schema |
 
 Compatibility env vars (existing otelc surface only in MVP):
 
 - `OTEL_GO_ENABLED_INSTRUMENTATIONS`
-- `OTEL_GO_DISABLED_INSTRUMENTATIONS`
 
 ## Phase status
 
-Phase 0 (this release) provides the skeleton and documentation only.
-See the README roadmap for subsequent phases.
+Phase 1 (v0.2.0, current) adds the first behavior manifest and a deterministic
+code-generation pipeline (`otelcconfig generate`): typed structs, defaults, env-var
+mappings, a JSON Schema fragment for the `instrumentation/development` shape, and a
+Markdown catalog. Committed outputs under `generated/` are golden-tested and CI fails
+on drift via `generate --check`.
+
+Phase 2 will implement `load`, `validate`, `resolve`, and `explain` over the generated
+schema and defaults. See the README roadmap for subsequent phases.

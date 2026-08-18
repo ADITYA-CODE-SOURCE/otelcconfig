@@ -53,6 +53,10 @@ jobs:
         if: runner.os == 'Linux' && matrix.go == '1.25.x'
         run: go test -race ./...
 
+      - name: Generate drift check
+        if: runner.os != 'Windows'
+        run: go run ./cmd/otelcconfig generate --check
+
       - name: Build
         run: go build -ldflags "-X main.version=ci" -o otelcconfig ./cmd/otelcconfig
 
@@ -61,9 +65,12 @@ jobs:
         run: |
           test "$(./otelcconfig version)" = "otelcconfig version ci"
           ./otelcconfig help
-          # Planned commands must fail honestly in Phase 0
-          if ./otelcconfig generate; then
-            echo "generate should not succeed in Phase 0"
+          test -d generated
+          test -f generated/types/nethttp_client_gen.go
+          test -f generated/schema/nethttp_client.json
+          # Planned commands must fail honestly
+          if ./otelcconfig validate; then
+            echo "validate should not succeed before Phase 2"
             exit 1
           fi
 

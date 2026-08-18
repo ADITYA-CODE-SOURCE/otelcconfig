@@ -1,0 +1,41 @@
+# otelcconfig behavior manifest — net/http client instrumentation
+#
+# Independent prototype. Not an official OpenTelemetry component.
+# Manifest format follows the Java agent metadata.yaml pattern referenced by
+# otelc Issue #705: this file is the single source of truth from which the
+# go: validation schema, the option catalog, and defaults are generated.
+#
+# Cross-language keys (general.*) use official OpenTelemetry declarative
+# configuration keys. The go: key is owned by this prototype.
+manifest_version: "0.1.0"
+
+instrumentation:
+  name: nethttp.client
+  description: HTTP client compile-time instrumentation built into otelc (net/http).
+  library_link: https://pkg.go.dev/net/http
+
+options:
+  - name: enabled
+    declarative_path: go.nethttp.client.enabled
+    type: boolean
+    default: true
+    env_var: OTEL_GO_ENABLED_INSTRUMENTATIONS
+    env_var_semantics: csv_contains
+    description: Whether the net/http client instrumentation emits telemetry. Compatible with otelc's runtime instrumentation enable/disable lists.
+    stability: stable
+
+  - name: request_captured_headers
+    declarative_path: general.http.client.request_captured_headers
+    type: list_string
+    default: []
+    description: Outbound request headers to capture as span attributes.
+    stability: experimental
+    upstream_ref: general.http.client.request_captured_headers
+
+  - name: sensitive_query_parameters
+    declarative_path: general.sanitization.url.sensitive_query_parameters
+    type: list_string
+    default: []
+    description: Query parameter names whose values are redacted from URLs.
+    stability: experimental
+    upstream_ref: general.sanitization.url.sensitive_query_parameters

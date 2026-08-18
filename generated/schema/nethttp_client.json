@@ -1,0 +1,75 @@
+{
+  "$id": "https://github.com/ADITYA-CODE-SOURCE/otelcconfig/generated/schema/nethttp_client.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "HTTP client compile-time instrumentation built into otelc (net/http).",
+  "properties": {
+    "general": {
+      "properties": {
+        "http": {
+          "properties": {
+            "client": {
+              "properties": {
+                "request_captured_headers": {
+                  "description": "Outbound request headers to capture as span attributes.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1,
+                  "type": "array",
+                  "x-stability": "experimental",
+                  "x-upstream-ref": "general.http.client.request_captured_headers"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "sanitization": {
+          "properties": {
+            "url": {
+              "properties": {
+                "sensitive_query_parameters": {
+                  "description": "Query parameter names whose values are redacted from URLs.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1,
+                  "type": "array",
+                  "x-stability": "experimental",
+                  "x-upstream-ref": "general.sanitization.url.sensitive_query_parameters"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "go": {
+      "properties": {
+        "nethttp": {
+          "properties": {
+            "client": {
+              "properties": {
+                "enabled": {
+                  "default": true,
+                  "description": "Whether the net/http client instrumentation emits telemetry. Compatible with otelc's runtime instrumentation enable/disable lists.",
+                  "type": "boolean",
+                  "x-stability": "stable"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "title": "nethttp.client behavior configuration",
+  "type": "object"
+}
