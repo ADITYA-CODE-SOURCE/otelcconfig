@@ -1,12 +1,19 @@
 # Examples
 
-Example declarative configuration files will land in Phase 2, once the loader
-and JSON Schema validation exist.
+Example declarative configuration files for the OpenTelemetry
+`instrumentation/development` shape consumed by the nethttp.client behavior
+manifest (Phase 2).
 
-Planned:
+- `minimal.yaml` — smallest valid example; everything falls back to defaults
+- `nethttp.yaml` — sets `general.*` values and disables the net/http client
 
-- `minimal.yaml` — smallest valid `instrumentation/development` example
-- `nethttp.yaml` — net/http client options used by the Phase 3 demo
+Try them:
 
-Until then, see [docs/architecture.md](../docs/architecture.md) for the intended
-YAML shape under the official OpenTelemetry declarative configuration model.
+```bash
+go run ./cmd/otelcconfig validate examples/minimal.yaml
+go run ./cmd/otelcconfig validate examples/nethttp.yaml
+go run ./cmd/otelcconfig resolve  examples/nethttp.yaml
+```
+
+See [docs/architecture.md](../docs/architecture.md) for the intended YAML shape
+under the official OpenTelemetry declarative configuration model.

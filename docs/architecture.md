@@ -53,7 +53,7 @@ from that declaration:
 | `manifest` | Parse and validate behavior manifests | 1 |
 | `codegen` | Deterministic generators | 1 |
 | `generated` | Committed, golden-tested outputs | 1 |
-| `config` | Load, substitute, resolve, typed runtime | 2–3 |
+| `config` | Load, substitute, validate, resolve, typed runtime | 2–3 |
 | `cmd/otelcconfig` | CLI entrypoint | 0+ |
 | `demo` | net/http end-to-end proof | 3 |
 | `internal/yamlutil` | Shared YAML helpers | 1+ |
@@ -110,11 +110,34 @@ Compatibility env vars (existing otelc surface only in MVP):
 
 ## Phase status
 
-Phase 1 (v0.2.0, current) adds the first behavior manifest and a deterministic
-code-generation pipeline (`otelcconfig generate`): typed structs, defaults, env-var
-mappings, a JSON Schema fragment for the `instrumentation/development` shape, and a
-Markdown catalog. Committed outputs under `generated/` are golden-tested and CI fails
-on drift via `generate --check`.
+### Phase 2 (v0.3.0, current)
 
-Phase 2 will implement `load`, `validate`, `resolve`, and `explain` over the generated
-schema and defaults. See the README roadmap for subsequent phases.
+The `config` package implements the load/substitute/validate/resolve half of the
+pipeline over the generated schema:
+
+- **Load** — read and decode `instrumentation/development` YAML
+- **Substitute** — resolve `${ENV:-default}` references before validation so an
+  unresolved environment fails early at build time
+- **Validate** — strict JSON Schema validation against the generated schema; the
+  `general:` subtree is closed (`additionalProperties: false`) so undeclared official
+  keys are rejected, while the prototype-owned `go:` map stays open per
+  [docs/experiments/upstream-gaps.md](experiments/upstream-gaps.md)
+- **Resolve** — compute the final engine values with precedence
+  `env  >  file  >  defaults`, including the existing
+  `OTEL_GO_ENABLED_INSTRUMENTATIONS` compatibility surface, and report each value's
+  source for transparency
+
+CLI: `validate`, `resolve`, `explain`, `catalog`. Phase 1 local flow (per-machine
+local precedence) stays unchanged — Phase 3 bakes engine values into the binary so
+Phase 1 precedence can be removed.
+
+### Phase 1 (v0.2.0, done)
+
+Added the first behavior manifest and a deterministic code-generation pipeline
+(`otelcconfig generate`): typed structs, defaults, env-var mappings, a JSON Schema
+fragment for the `instrumentation/development` shape, and a Markdown catalog.
+Committed outputs under `generated/` are golden-tested and CI fails on drift via
+`generate --check`.
+
+Phase 3 will add the typed runtime package and `bake`. See the README roadmap for
+subsequent phases.

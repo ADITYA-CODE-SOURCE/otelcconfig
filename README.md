@@ -11,7 +11,7 @@ Declarative Configuration Toolkit for [otelc](https://github.com/open-telemetry/
 [![CI](https://github.com/ADITYA-CODE-SOURCE/otelcconfig/actions/workflows/ci.yml/badge.svg)](https://github.com/ADITYA-CODE-SOURCE/otelcconfig/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Go Reference](https://pkg.go.dev/badge/github.com/ADITYA-CODE-SOURCE/otelcconfig.svg)](https://pkg.go.dev/github.com/ADITYA-CODE-SOURCE/otelcconfig)
-[![Status](https://img.shields.io/badge/status-phase%201%20codegen-blue)](https://github.com/ADITYA-CODE-SOURCE/otelcconfig/releases)
+[![Status](https://img.shields.io/badge/status-phase%202%20validate-blue)](https://github.com/ADITYA-CODE-SOURCE/otelcconfig/releases)
 
 ## What this project is
 
@@ -65,29 +65,41 @@ Issue #705 proposes adopting the OpenTelemetry
 | Phase | Release | Status |
 |-------|---------|--------|
 | 0 — Foundation | `v0.1.1` | Done |
-| 1 — Manifest + codegen | `v0.2.0` | **Current** |
-| 2 — Validate + resolve | `v0.3.0` | Planned |
+| 1 — Manifest + codegen | `v0.2.0` | Done |
+| 2 — Validate + resolve | `v0.3.0` | **Current** |
 | 3 — Typed runtime demo + RFC | `v0.4.0` | Planned |
 | 4 — Static-analysis guard | `v0.5.0` | Stretch |
 
-Phase 1 ships the first behavior manifest (`manifest/nethttp/metadata.yaml`) and a
+Phase 1 shipped the first behavior manifest (`manifest/nethttp/metadata.yaml`) and a
 deterministic code-generation pipeline. `otelcconfig generate` derives typed structs,
 defaults, env-var mappings, a JSON Schema fragment, and a Markdown catalog; committed
 outputs are golden-tested and CI fails on drift via `generate --check`.
+
+Phase 2 (current) turns the generated schema into a working config pipeline.
+`otelcconfig validate` loads and validates user declarative YAML
+(`instrumentation/development`), `otelcconfig resolve` shows the final engine
+values plus their sources, and `explain`/`catalog` document every option.
+Validation is strict: unknown keys outside the declared `go:` subtree are rejected,
+and `${ENV:-default}`-style references are resolved so unresolved environments fail
+early at build time.
 
 > **Resume status:** Phase 1 is a public foundation with real architecture signal, not a
 > completed portfolio project. List `otelcconfig` as a substantial LFX project only after
 > the Phase 3 typed-runtime demonstration and end-to-end tests are complete. Phase 1–2
 > may be listed as "in progress."
 
-## Quick start (Phase 1)
+## Quick start (Phase 2)
 
 ```bash
 git clone https://github.com/ADITYA-CODE-SOURCE/otelcconfig.git
 cd otelcconfig
 make check
-make build VERSION=v0.2.0
+make build VERSION=v0.3.0
 ./otelcconfig version
+go run ./cmd/otelcconfig validate examples/nethttp.yaml  # validate a config
+go run ./cmd/otelcconfig resolve  examples/nethttp.yaml  # final values + sources
+go run ./cmd/otelcconfig explain  request_captured_headers
+go run ./cmd/otelcconfig catalog
 go run ./cmd/otelcconfig generate       # regenerate derived artifacts
 go run ./cmd/otelcconfig generate --check  # verify committed artifacts are current
 ```
@@ -102,15 +114,15 @@ Implemented:
 
 ```text
 otelcconfig generate   # Phase 1 — generate types, defaults, schema, docs (--check for drift)
+otelcconfig validate   # Phase 2 — validate user YAML (+ ${ENV} substitution) against schema
+otelcconfig resolve    # Phase 2 — show final engine values and their sources
+otelcconfig explain    # Phase 2 — explain one option (path or short name)
+otelcconfig catalog    # Phase 2 — list all options (optionally filtered by instrumentation)
 ```
 
 Planned (later phases):
 
 ```text
-otelcconfig validate   # Phase 2 — validate user YAML against generated schema
-otelcconfig resolve    # Phase 2 — show final values and sources
-otelcconfig explain    # Phase 2 — explain one option
-otelcconfig catalog    # Phase 2 — list all options
 otelcconfig bake       # Phase 3 — model build-time config embedding
 otelcconfig guard      # Phase 4 — reject undeclared config access
 otelcconfig diff       # Phase 4 — compare two configs

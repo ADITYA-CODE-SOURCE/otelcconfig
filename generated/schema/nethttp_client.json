@@ -4,10 +4,13 @@
   "description": "HTTP client compile-time instrumentation built into otelc (net/http).",
   "properties": {
     "general": {
+      "additionalProperties": false,
       "properties": {
         "http": {
+          "additionalProperties": false,
           "properties": {
             "client": {
+              "additionalProperties": false,
               "properties": {
                 "request_captured_headers": {
                   "description": "Outbound request headers to capture as span attributes.",
@@ -26,8 +29,10 @@
           "type": "object"
         },
         "sanitization": {
+          "additionalProperties": false,
           "properties": {
             "url": {
+              "additionalProperties": false,
               "properties": {
                 "sensitive_query_parameters": {
                   "description": "Query parameter names whose values are redacted from URLs.",
