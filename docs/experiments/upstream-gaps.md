@@ -37,3 +37,22 @@ instrumentation is enabled". The official schema models stability versions and
   `csv_contains` semantics, so it is compatibility-safe in the MVP.
 - **Cross-language proposal:** possible as a `general.*` key, but out of scope for
   Phase 1; record here until upstream takes it up.
+
+### `general.http.client.request_captured_headers` has no env mapping (Phase 2)
+
+Phase 1 generated no compatibility env var for `request_captured_headers` or
+`sensitive_query_parameters` because the manifest declares no env name for them;
+they are config-file-only options. This is correct per the manifest, but worth
+recording: the Phase 2 `resolve` output shows `env: —` for these options, and the
+OpenTelemetry Go SDK env surface does not currently define equivalents. If cross-SDK
+env parity is desired upstream, the manifest should gain `env_var` entries before
+any env precedence can apply.
+
+### `general:` subtree is closed, `go:` subtree is open (Phase 2)
+
+Phase 2 validation sets `additionalProperties: false` for the generated
+`general:` subtree, so unrecognized official keys fail loudly instead of being
+silently ignored. The `go:` subtree stays open (`additionalProperties: true`) so
+prototype-owned options can evolve without a codegen rebuild each time.
+This asymmetry is intentional and matches the two-manifest discipline; the
+generated JSON Schema encodes it (`generated/schema/nethttp_client.json`).

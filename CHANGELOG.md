@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-08-19
+
+### Added
+
+- `config` package: load user declarative YAML, substitute `${ENV:-default}`
+  references, strictly validate against the generated schema, and resolve final
+  engine values with `env > file > defaults` precedence
+- Strict validation: the `general:` subtree is now closed
+  (`additionalProperties: false`); undeclared official keys are rejected while the
+  prototype-owned `go:` map remains open
+- Env-var precedence over file values, including the existing
+  `OTEL_GO_ENABLED_INSTRUMENTATIONS` compatibility surface, with per-value source
+  reporting (`file`, `env`, `default`)
+- `otelcconfig validate`: load + warn-on-substitution + strict schema validation of
+  `instrumentation/development` YAML
+- `otelcconfig resolve`: final engine values with sources, plus the typed engine
+  struct for consumption by later phases
+- `otelcconfig explain`: one option by declarative path or short name, including
+  type, default, stability, env mapping, and upstream reference
+- `otelcconfig catalog`: all options per instrumentation (optionally filtered), with
+  defaults and env mappings
+- Examples: `examples/minimal.yaml` and `examples/nethttp.yaml`, wired into CLI tests
+- `github.com/santhosh-tekuri/jsonschema/v6` JSON Schema validation dependency
+
+### Changed
+
+- `validate`, `resolve`, `explain`, and `catalog` are no longer stubs; only
+  `bake`, `guard`, and `diff` remain "not implemented"
+- CI CLI smoke now runs `validate`/`resolve`/`explain`/`catalog` against the examples
+
+### Notes
+
+- Phase 2 release. Local flow evaluation (Phase 1) is preserved for the MVP; Phase 3
+  bakes engine values into the binary and removes local precedence.
+- Next: Phase 3 — typed runtime package and `otelcconfig bake` (`v0.4.0`).
+
 ## [0.2.0] — 2026-08-18
 
 ### Added
@@ -62,7 +98,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Phase 0 only. No configuration loading, code generation, or resolution yet.
 - Next: Phase 1 — behavior manifest and deterministic code generation (`v0.2.0`).
 
-[Unreleased]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/releases/tag/v0.1.0

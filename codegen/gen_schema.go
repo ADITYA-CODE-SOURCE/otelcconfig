@@ -52,6 +52,12 @@ func insertSchemaPath(properties map[string]any, o *manifest.Option) {
 				"type":       "object",
 				"properties": map[string]any{},
 			}
+			// The general: node is closed per ADR-0002
+			// (additionalProperties: false). The go: node stays open so unknown
+			// instrumentations can be configured without a manifest yet.
+			if segments[0] == "general" {
+				node["additionalProperties"] = false
+			}
 			cur[seg] = node
 		}
 		cur = node["properties"].(map[string]any)

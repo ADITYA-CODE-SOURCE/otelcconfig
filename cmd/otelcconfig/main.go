@@ -3,8 +3,9 @@
 
 // Command otelcconfig is the CLI entrypoint for the otelcconfig toolkit.
 //
-// Phase 1 implements `generate`; remaining commands are honest stubs for
-// later phases. See docs/architecture.md for the full roadmap.
+// Phase 2 implements generate, validate, resolve, explain, and catalog;
+// remaining commands are honest stubs for later phases. See
+// docs/architecture.md for the full roadmap.
 package main
 
 import (
@@ -40,7 +41,15 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return writeUsage(stdout, stderr)
 	case "generate":
 		return runGenerate(rest, stdout, stderr)
-	case "validate", "resolve", "explain", "catalog", "diff", "bake", "guard":
+	case "validate":
+		return runValidate(rest, stdout, stderr)
+	case "resolve":
+		return runResolve(rest, stdout, stderr)
+	case "explain":
+		return runExplain(rest, stdout, stderr)
+	case "catalog":
+		return runCatalog(rest, stdout, stderr)
+	case "diff", "bake", "guard":
 		return notImplemented(cmd, rest, stderr)
 	default:
 		if _, err := fmt.Fprintf(stderr, "unknown command %q\n\n", cmd); err != nil {
@@ -104,12 +113,12 @@ Commands:
   version     Print version and exit
   help        Show this help
   generate    Generate types, defaults, env map, schema, and docs from manifests
+  validate    Validate a declarative configuration file       <file>
+  resolve     Show resolved values and their sources          <file>
+  explain     Explain one configuration option                <option-or-path>
+  catalog     List all configurable options
 
 Planned (not implemented):
-  validate    Validate a declarative configuration file                 [Phase 2]
-  resolve     Show resolved values and their sources                    [Phase 2]
-  explain     Explain one configuration option                          [Phase 2]
-  catalog     List all configurable options                             [Phase 2]
   bake        Model build-time config embedding (not otelc-integrated)  [Phase 3]
   guard       Reject undeclared configuration access                    [Phase 4]
   diff        Compare two configuration files                           [Phase 4]
@@ -119,10 +128,17 @@ Generate flags:
   --output <dir>     Generated artifacts directory (default ./generated)
   --check            Verify committed outputs are up to date without writing
 
+Config command flags:
+  --manifest <dir>   Behavior manifests directory (default ./manifest)
+
 Examples:
   otelcconfig version
   otelcconfig generate
   otelcconfig generate --check
+  otelcconfig validate examples/nethttp.yaml
+  otelcconfig resolve  examples/nethttp.yaml
+  otelcconfig explain  request_captured_headers
+  otelcconfig catalog
 
 Docs: https://github.com/ADITYA-CODE-SOURCE/otelcconfig
 `)+"\n")

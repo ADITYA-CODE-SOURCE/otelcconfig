@@ -1,0 +1,17 @@
+# net/http client demo configuration for the otelcconfig prototype.
+#
+# Demonstrates the official OpenTelemetry declarative configuration shape
+# (instrumentation/development) used by the nethttp.client behavior manifest.
+instrumentation:
+  development:
+    general:
+      http:
+        client:
+          request_captured_headers: ["user-agent", "x-request-id"]
+      sanitization:
+        url:
+          sensitive_query_parameters: ["token", "password"]
+    go:
+      nethttp:
+        client:
+          enabled: false

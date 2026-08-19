@@ -68,9 +68,14 @@ jobs:
           test -d generated
           test -f generated/types/nethttp_client_gen.go
           test -f generated/schema/nethttp_client.json
+          ./otelcconfig validate examples/minimal.yaml
+          ./otelcconfig validate examples/nethttp.yaml
+          ./otelcconfig resolve examples/nethttp.yaml
+          ./otelcconfig explain request_captured_headers
+          ./otelcconfig catalog
           # Planned commands must fail honestly
-          if ./otelcconfig validate; then
-            echo "validate should not succeed before Phase 2"
+          if ./otelcconfig bake; then
+            echo "bake should not succeed before Phase 3"
             exit 1
           fi
 

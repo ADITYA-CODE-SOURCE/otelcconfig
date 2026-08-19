@@ -86,7 +86,7 @@ func TestRunUnknown(t *testing.T) {
 }
 
 func TestRunNotImplemented(t *testing.T) {
-	for _, cmd := range []string{"validate", "resolve", "explain", "catalog", "diff", "bake", "guard"} {
+	for _, cmd := range []string{"bake", "guard", "diff"} {
 		code, stdout, stderr := runCommand(cmd)
 		if code != 1 {
 			t.Fatalf("%s exit code = %d, want 1", cmd, code)
@@ -131,13 +131,13 @@ func TestRunHandlesUnknownCommandUsageFailure(t *testing.T) {
 }
 
 func TestRunHandlesNotImplementedOutputFailure(t *testing.T) {
-	if code := run([]string{"validate"}, &bytes.Buffer{}, failingWriter{}); code != 1 {
-		t.Fatalf("validate with failing stderr exit code = %d, want 1", code)
+	if code := run([]string{"bake"}, &bytes.Buffer{}, failingWriter{}); code != 1 {
+		t.Fatalf("bake with failing stderr exit code = %d, want 1", code)
 	}
 
 	stderr := &failOnWrite{fail: 2}
-	if code := run([]string{"validate"}, &bytes.Buffer{}, stderr); code != 1 {
-		t.Fatalf("validate with failing second write exit code = %d, want 1", code)
+	if code := run([]string{"bake"}, &bytes.Buffer{}, stderr); code != 1 {
+		t.Fatalf("bake with failing second write exit code = %d, want 1", code)
 	}
 }
 

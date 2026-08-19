@@ -1,0 +1,10 @@
+# Minimal valid declarative configuration for the otelcconfig prototype.
+#
+# Requires only instrumentation.development. Both general: and go: are
+# optional; omitted options fall back to their defaults.
+instrumentation:
+  development:
+    go:
+      nethttp:
+        client:
+          enabled: true
