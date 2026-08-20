@@ -11,11 +11,11 @@ Declarative Configuration Toolkit for [otelc](https://github.com/open-telemetry/
 [![CI](https://github.com/ADITYA-CODE-SOURCE/otelcconfig/actions/workflows/ci.yml/badge.svg)](https://github.com/ADITYA-CODE-SOURCE/otelcconfig/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Go Reference](https://pkg.go.dev/badge/github.com/ADITYA-CODE-SOURCE/otelcconfig.svg)](https://pkg.go.dev/github.com/ADITYA-CODE-SOURCE/otelcconfig)
-[![Status](https://img.shields.io/badge/status-phase%204%20complete-blue)](https://github.com/ADITYA-CODE-SOURCE/otelcconfig/releases)
+[![Status](https://img.shields.io/badge/status-roadmap%20complete-blue)](https://github.com/ADITYA-CODE-SOURCE/otelcconfig/releases)
 
 ## What this project is
 
-`otelcconfig` explores how per-instrumentation **behavior configuration** could work for otelc:
+Per-instrumentation **behavior configuration** for otelc, end to end:
 
 ```text
 behavior manifest (metadata.yaml)
@@ -31,38 +31,117 @@ env vars  >  config file  >  defaults
 typed runtime API consumed by instrumentation hooks (never parses YAML)
 ```
 
-It is a **standalone design-exploration prototype** of the mechanism described in:
-
-- Upstream issue: [opentelemetry-go-compile-instrumentation#705](https://github.com/open-telemetry/opentelemetry-go-compile-instrumentation/issues/705)
-- LFX proposal: [cncf/mentoring#1939](https://github.com/cncf/mentoring/issues/1939) — *Declarative instrumentation configuration for otelc* (2026 Term 3)
-
-## What this project is not
-
-- Not an official OpenTelemetry component
-- Not affiliated with or endorsed by the OpenTelemetry Go Compile Instrumentation SIG
-- Not a replacement for the RFC planned during the LFX mentorship
-- Not integrated into otelc's `-toolexec` compile-time rewriting pipeline
-- Not a selection mechanism (that belongs to `otel.instrumentation.go` / ADR-0005)
-
-Module path: `github.com/ADITYA-CODE-SOURCE/otelcconfig`  
-Do **not** import this under `go.opentelemetry.io/...`.
-
-## Problem
-
-Today otelc can turn instrumentations on or off with:
+Today otelc can only turn instrumentations on or off:
 
 ```bash
 OTEL_GO_ENABLED_INSTRUMENTATIONS=nethttp,grpc
 OTEL_GO_DISABLED_INSTRUMENTATIONS=nethttp
 ```
 
-There is no way to configure *how* an instrumentation behaves — capture specific HTTP headers,
-redact sensitive URL query parameters, or gate a semantic-convention migration.
-Issue #705 proposes adopting the OpenTelemetry
+There is no way to configure *how* an instrumentation behaves — which HTTP headers
+to capture, which sensitive URL parameters to redact, or how to gate a
+semantic-convention migration. Issue #705 proposes adopting the OpenTelemetry
 [declarative configuration](https://github.com/open-telemetry/opentelemetry-configuration)
-`instrumentation/development` node and a Java-agent-style per-instrumentation manifest.
+`instrumentation/development` node plus a Java-agent-style per-instrumentation
+manifest. `otelcconfig` implements and demonstrates that mechanism.
 
-## Status
+The design is described in
+[RFC 0001](docs/rfc/0001-declarative-instrumentation-configuration.md) and the
+roadmap-level details in [docs/architecture.md](docs/architecture.md).
+
+## What it proves
+
+- A **single behavior manifest** drives typed structs, defaults, a strict JSON
+  Schema, a Markdown catalog, and env-var mappings — one source of truth, no drift.
+- **Declarative YAML is validated and resolved at build time**: unknown keys are
+  rejected, `${ENV:-default}` references resolve so missing environments fail
+  early, and precedence is `env > file > defaults`.
+- **Configuration is baked into the binary**: `otelcconfig bake` freezes the
+  resolved values into a Go package. Hooks consume a typed `runtime` API and
+  never parse YAML — configuration cannot change a built binary's behavior.
+- **The contract is enforced, not assumed**: `otelcconfig guard` is a
+  dependency-free static analyzer that rejects `runtime.Register` outside
+  generated code, option reads from the environment, and YAML imports in hooks.
+- **It works**: an end-to-end demo captures request headers and redacts sensitive
+  query parameters, driven entirely by the baked configuration. See
+  [docs/demo.md](docs/demo.md).
+
+## Try it in 60 seconds
+
+```bash
+git clone https://github.com/ADITYA-CODE-SOURCE/otelcconfig.git
+cd otelcconfig
+make check        # fmt, tidy, vet, tests, drift + guard checks — nothing is modified
+make demo-run     # bake examples/demo.yaml, then run the end-to-end demo
+```
+
+The demo fires an HTTP request through a hook modeled on otelc's net/http client
+enabler pattern. The URL query parameter `token` is redacted and the configured
+request headers are captured, purely from YAML frozen at build time:
+
+```text
+method=GET
+url=http://127.0.0.1:50459/demo?keep=visible&token=[REDACTED]
+header user-agent=otelcconfig-demo/1.0
+header x-request-id=demo-request-42
+enabled=true
+```
+
+## CLI
+
+```text
+otelcconfig generate   generate types, defaults, schema, docs (--check for drift)
+otelcconfig validate   validate user YAML (+ ${ENV} substitution) against the schema
+otelcconfig resolve    show final engine values and their sources
+otelcconfig explain    explain one option (path or short name)
+otelcconfig catalog    list all options (optionally filtered by instrumentation)
+otelcconfig bake       freeze resolved config into a Go package (--check for drift)
+otelcconfig guard      reject undeclared config access in hook directories
+otelcconfig diff       compare two configs by resolved value (0 same, 1 different, 2 usage)
+```
+
+## Quick start
+
+```bash
+make check
+make build VERSION=v0.5.0
+./otelcconfig version
+./otelcconfig validate examples/nethttp.yaml          # validate a config
+./otelcconfig resolve  examples/nethttp.yaml          # final values + sources
+./otelcconfig explain  request_captured_headers
+./otelcconfig catalog
+./otelcconfig bake --output baked --check examples/demo.yaml   # verify baked pkg current
+./otelcconfig guard ./demo ./runtime ./baked          # reject undeclared access
+./otelcconfig diff examples/minimal.yaml examples/nethttp.yaml
+go run ./cmd/otelcconfig generate                     # regenerate derived artifacts
+go run ./cmd/otelcconfig generate --check             # verify committed artifacts are current
+```
+
+`make check` is intentionally non-mutating: it fails on unformatted sources or
+untidy module files instead of silently rewriting them (`make fmt`, `make tidy`,
+and `make lint` are available). CI runs the same checks plus the race detector
+on Linux, macOS, and Windows.
+
+## Why the pipeline is shaped this way
+
+- **Manifest → generated schema.** The manifest for the net/http instrumentation
+  (`manifest/nethttp/metadata.yaml`) is the single source of truth; everything the
+  pipeline validates, documents, and resolves derives from it.
+- **Bake at build time (ADR-0003).** Hooks never handle YAML. Freezing resolved
+  values in code keeps the dependency-light, enables static analysis, and matches
+  the "baked config" design note in Issue #705.
+- **Guard as the enforcement layer (ADR-0004).** Import- and name-based analysis
+  (go/ast) keeps the module dependency-free while mechanically enforcing that the
+  typed runtime API is the only legitimate access path — on this repo via
+  `make guard-check` and CI.
+- **Diff as an audit tool.** `otelcconfig diff` compares two files by resolved
+  engine value, so reviewers see the effective behavior change, not raw YAML.
+
+The full data flow, package layout, and the runtime contract live in
+[docs/architecture.md](docs/architecture.md); every major decision has a recorded
+ADR under [docs/adr/](docs/adr/).
+
+## Roadmap status
 
 | Phase | Release | Status |
 |-------|---------|--------|
@@ -70,91 +149,21 @@ Issue #705 proposes adopting the OpenTelemetry
 | 1 — Manifest + codegen | `v0.2.0` | Done |
 | 2 — Validate + resolve | `v0.3.0` | Done |
 | 3 — Typed runtime demo + RFC | `v0.4.0` | Done |
-| 4 — Static-analysis guard | `v0.5.0` | **Current** |
+| 4 — Static-analysis guard + diff | `v0.5.0` | Done |
 
-Phase 1 shipped the first behavior manifest (`manifest/nethttp/metadata.yaml`) and a
-deterministic code-generation pipeline. `otelcconfig generate` derives typed structs,
-defaults, env-var mappings, a JSON Schema fragment, and a Markdown catalog; committed
-outputs are golden-tested and CI fails on drift via `generate --check`.
+The roadmap is complete. Every command above is implemented, tested (including
+race conditions and drift checks), and enforced in CI.
 
-Phase 2 turned the generated schema into a working config pipeline.
-`otelcconfig validate` loads and validates user declarative YAML
-(`instrumentation/development`), `otelcconfig resolve` shows the final engine
-values plus their sources, and `explain`/`catalog` document every option.
-Validation is strict: unknown keys outside the declared `go:` subtree are rejected,
-and `${ENV:-default}`-style references are resolved so unresolved environments fail
-early at build time.
+## What this project is not
 
-Phase 3 proved the full supply chain. `otelcconfig bake` freezes resolved
-configuration into a Go package (`baked/`) that registers it with the `runtime`
-package at init; instrumentation hooks consume the typed runtime API and never
-parse YAML. The `demo` package models otelc's net/http client enabler pattern, and
-`cmd/demo` is an end-to-end demonstration: declarative YAML → bake → binary →
-captured headers and redacted query parameters, asserted by an integration test.
-The mechanism is documented in [RFC 0001](docs/rfc/0001-declarative-instrumentation-configuration.md).
+- Not an official OpenTelemetry component
+- Not affiliated with or endorsed by the OpenTelemetry Go Compile Instrumentation SIG
+- Not the upstream RFC itself, nor a replacement for one
+- Not integrated into otelc's `-toolexec` compile-time rewriting pipeline
+- Not a selection mechanism (that belongs to `otel.instrumentation.go` / ADR-0005)
 
-Phase 4 (current) closes the roadmap. `otelcconfig guard` is a static analyzer
-that rejects undeclared configuration access in hook packages — `runtime.Register`
-outside generated baked code, option values read from the environment, and YAML
-parsing in hooks — enforced on the repo itself by `make guard-check` and CI.
-`otelcconfig diff` compares two configuration files by resolved engine value
-(exit code mirrors `diff`(1)). Together they make the typed runtime API the only
-legitimate access path, verifiable at CI time.
-
-> **Resume status:** Phase 4 makes the mechanism fully self-checking: hooks can
-> only read baked configuration, enforced by an analyzer with zero new
-> dependencies, plus a config comparison command. `otelcconfig` is a complete
-> demonstration of the Issue #705 mechanism with all roadmap phases delivered.
-
-## Quick start (Phase 4)
-
-```bash
-git clone https://github.com/ADITYA-CODE-SOURCE/otelcconfig.git
-cd otelcconfig
-make check
-make build VERSION=v0.5.0
-./otelcconfig version
-go run ./cmd/otelcconfig validate examples/nethttp.yaml  # validate a config
-go run ./cmd/otelcconfig resolve  examples/nethttp.yaml  # final values + sources
-go run ./cmd/otelcconfig explain  request_captured_headers
-go run ./cmd/otelcconfig catalog
-go run ./cmd/otelcconfig bake --output baked --check examples/demo.yaml  # verify baked pkg current
-go run ./cmd/otelcconfig guard ./demo ./runtime ./baked              # reject undeclared access
-go run ./cmd/otelcconfig diff examples/minimal.yaml examples/nethttp.yaml
-make demo-run                                                     # bake + run the demo
-go run ./cmd/otelcconfig generate       # regenerate derived artifacts
-go run ./cmd/otelcconfig generate --check  # verify committed artifacts are current
-```
-
-`make check` is intentionally non-mutating: it fails on unformatted sources or
-untidy module files instead of silently rewriting them. Run `make fmt` and
-`make tidy` explicitly when needed. `make lint` requires `golangci-lint`.
-
-## CLI
-
-Implemented:
-
-```text
-otelcconfig generate   # Phase 1 — generate types, defaults, schema, docs (--check for drift)
-otelcconfig validate   # Phase 2 — validate user YAML (+ ${ENV} substitution) against schema
-otelcconfig resolve    # Phase 2 — show final engine values and their sources
-otelcconfig explain    # Phase 2 — explain one option (path or short name)
-otelcconfig catalog    # Phase 2 — list all options (optionally filtered by instrumentation)
-otelcconfig bake       # Phase 3 — freeze resolved config into a Go package (--check for drift)
-otelcconfig guard      # Phase 4 — reject undeclared config access in hook dirs
-otelcconfig diff       # Phase 4 — compare two configs by resolved value (0 same, 1 different)
-```
-
-## Architecture overview
-
-See [docs/architecture.md](docs/architecture.md).
-
-Key decisions are recorded as ADRs under [docs/adr/](docs/adr/):
-
-- [ADR-0001](docs/adr/0001-record-architecture-decisions.md) — Record architecture decisions
-- [ADR-0002](docs/adr/0002-adopt-otel-declarative-config-node.md) — Adopt OTel declarative config node
-- [ADR-0003](docs/adr/0003-bake-at-build-time.md) — Bake configuration at build time
-- [ADR-0004](docs/adr/0004-static-guard.md) — Static guard for undeclared config access
+Module path: `github.com/ADITYA-CODE-SOURCE/otelcconfig`
+Do **not** import this under `go.opentelemetry.io/...`.
 
 ## Relationship to otelc
 
@@ -170,19 +179,6 @@ Key decisions are recorded as ADRs under [docs/adr/](docs/adr/):
 - Inventing config keys outside the OTel declarative configuration model
 - Replacing otelc's Weaver emission registry
 - Direct patches to otelc's compiler pipeline in this repository
-
-## LFX application positioning
-
-When this project reaches Phase 3, describe it accurately as:
-
-> An independent Go prototype exploring the mechanism proposed in otelc Issue #705,
-> with manifest-driven generation, declarative validation, backward-compatible
-> resolution, and typed runtime hooks.
-
-Do not claim that this repository implements Issue #705 upstream, is accepted by
-OpenTelemetry maintainers, or is an official OpenTelemetry contribution. Upstream
-contributor status comes from accepted participation in the upstream project; owning
-this independent repository does not by itself make the author an OpenTelemetry contributor.
 
 ## Contributing
 

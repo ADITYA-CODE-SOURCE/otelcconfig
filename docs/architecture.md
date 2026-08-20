@@ -42,7 +42,7 @@ from that declaration:
              │ guard (Phase 4)
              ▼
 ┌──────────────────────────┐
-│  go/analysis analyzer    │  reject undeclared option access
+│  AST guard analyzer      │  reject undeclared option access
 └──────────────────────────┘
 ```
 
@@ -121,7 +121,7 @@ Compatibility env vars (existing otelc surface only in MVP):
 
 ## Phase status
 
-### Phase 4 (v0.5.0, current)
+### Phase 4 (v0.5.0, done)
 
 Closes the roadmap with the final two commands:
 

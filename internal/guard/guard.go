@@ -100,7 +100,7 @@ func Run(dirs []string) ([]Diagnostic, error) {
 func goFiles(dir string) ([]string, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return nil, fmt.Errorf("guard: read directory %s: %w", dir, err)
+		return nil, fmt.Errorf("read directory %s: %w", dir, err)
 	}
 	var files []string
 	for _, e := range entries {
@@ -124,12 +124,12 @@ func analyzeFile(path string) ([]Diagnostic, error) {
 	fset := token.NewFileSet()
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("guard: read %s: %w", path, err)
+		return nil, fmt.Errorf("read %s: %w", path, err)
 	}
 	generated := strings.Contains(string(data), generatedMarker)
 	f, err := parser.ParseFile(fset, path, data, parser.AllErrors)
 	if err != nil {
-		return nil, fmt.Errorf("guard: parse %s: %w", path, err)
+		return nil, fmt.Errorf("parse %s: %w", path, err)
 	}
 
 	var diags []Diagnostic

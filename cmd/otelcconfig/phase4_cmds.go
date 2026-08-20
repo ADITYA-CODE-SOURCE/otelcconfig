@@ -36,7 +36,7 @@ func runGuard(args []string, stdout, stderr io.Writer) int {
 			return 1
 		}
 	}
-	if err := writeErrf(stderr, "guard: %d violation(s)\n", len(diags)); err != nil {
+	if err := writeErrf(stdout, "guard: %d violation(s)\n", len(diags)); err != nil {
 		return 1
 	}
 	return 1

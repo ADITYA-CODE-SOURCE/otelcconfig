@@ -4,11 +4,11 @@
 - **Date:** 2026-08-19
 - **Related:** [otelc#705](https://github.com/open-telemetry/opentelemetry-go-compile-instrumentation/issues/705),
   [opentelemetry-configuration](https://github.com/open-telemetry/opentelemetry-configuration),
-  [ADR-0002](adr/0002-adopt-otel-declarative-config-node.md),
-  [ADR-0003](adr/0003-bake-at-build-time.md)
+  [ADR-0002](../adr/0002-adopt-otel-declarative-config-node.md),
+  [ADR-0003](../adr/0003-bake-at-build-time.md)
 
-> This is an independent prototype document for the LFX Term 3 mentee working on
-> otelc#705. It is not an official OpenTelemetry proposal.
+> This is an independent prototype document exploring otelc#705. It is not an
+> official OpenTelemetry proposal.
 
 ## Problem
 
@@ -74,7 +74,7 @@ and request/response hooks read the remaining options.
   design note; adds latency, error paths, and a parser dependency to every binary.
 - **Embedded JSON + `go:embed` read at init** (considered) — works, but a literal
   Go composite value is statically analyzable, needs no unmarshalling, and can be
-  checked by the future `guard` analyzer.
+  checked by the implemented `guard` analyzer.
 - **Tool-file selection mixing selection and behavior** (rejected) — otelc ADR-0005
   owns selection (what gets woven); this mechanism owns behavior (how it behaves).
   The two must not be merged.
@@ -96,4 +96,4 @@ and request/response hooks read the remaining options.
 
 - Weaver emission registry (`schemas/otelc/groups/*.yaml`) — telemetry schema vs.
   behavior configuration stays separate.
-- Selection mechanisms. See [ADR-0002](adr/0002-adopt-otel-declarative-config-node.md).
+- Selection mechanisms. See [ADR-0002](../adr/0002-adopt-otel-declarative-config-node.md).

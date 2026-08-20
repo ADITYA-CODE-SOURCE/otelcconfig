@@ -21,7 +21,7 @@ The upstream schema (`opentelemetry-configuration/schema/instrumentation.yaml`) 
 - Environment variable substitution `${ENV:-default}` (Stable in the OTel data model)
 
 Inventing parallel keys (for example a custom `semconv_mode` enum or
-`capture_request_headers`) would conflict with the mentors' stated requirement
+`capture_request_headers`) would conflict with the stated requirement
 and teach the wrong vocabulary to anyone reading this prototype.
 
 ## Decision
@@ -58,7 +58,7 @@ and teach the wrong vocabulary to anyone reading this prototype.
 
 ## Consequences
 
-- The prototype stays aligned with the LFX mentorship design surface.
+- The prototype stays aligned with the otelc#705 design surface.
 - Maintainers reviewing the repo see familiar key names.
 - Some desired options may not exist upstream yet; those must be staged under
   `go:` or filed as upstream gaps.
