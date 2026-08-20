@@ -27,24 +27,24 @@ const (
 // ResolvedOption is a single resolved option value and its source.
 type ResolvedOption struct {
 	// Path is the declarative path of the option.
-	Path string
+	Path string `json:"path"`
 	// Value is the resolved value.
-	Value any
+	Value any `json:"value"`
 	// Source is SourceDefault, SourceFile, or SourceEnv.
-	Source string
+	Source string `json:"source"`
 	// EnvVar is the compatibility environment variable, when Source is env.
-	EnvVar string
+	EnvVar string `json:"env_var,omitempty"`
 }
 
 // Resolved is the resolved configuration for one instrumentation.
 type Resolved struct {
 	// Instrumentation is the instrumentation name (for example nethttp.client).
-	Instrumentation string
+	Instrumentation string `json:"instrumentation"`
 	// Options lists every option of the instrumentation in manifest order.
-	Options []ResolvedOption
+	Options []ResolvedOption `json:"options"`
 	// NetHTTPClientConfig is the typed value for the nethttp.client manifest.
 	// It is nil for other instrumentations.
-	NetHTTPClientConfig *types.NetHTTPClientConfig
+	NetHTTPClientConfig *types.NetHTTPClientConfig `json:"-"`
 }
 
 // Resolve computes final option values for every manifest with precedence

@@ -3,7 +3,7 @@
 
 // Command otelcconfig is the CLI entrypoint for the otelcconfig toolkit.
 //
-// Phase 2 implements generate, validate, resolve, explain, and catalog;
+// Phase 3 implements generate, validate, resolve, explain, catalog, and bake;
 // remaining commands are honest stubs for later phases. See
 // docs/architecture.md for the full roadmap.
 package main
@@ -49,7 +49,9 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runExplain(rest, stdout, stderr)
 	case "catalog":
 		return runCatalog(rest, stdout, stderr)
-	case "diff", "bake", "guard":
+	case "bake":
+		return runBake(rest, stdout, stderr)
+	case "diff", "guard":
 		return notImplemented(cmd, rest, stderr)
 	default:
 		if _, err := fmt.Fprintf(stderr, "unknown command %q\n\n", cmd); err != nil {
@@ -117,9 +119,9 @@ Commands:
   resolve     Show resolved values and their sources          <file>
   explain     Explain one configuration option                <option-or-path>
   catalog     List all configurable options
+  bake        Freeze resolved configuration into a Go package             <file>
 
 Planned (not implemented):
-  bake        Model build-time config embedding (not otelc-integrated)  [Phase 3]
   guard       Reject undeclared configuration access                    [Phase 4]
   diff        Compare two configuration files                           [Phase 4]
 
@@ -139,6 +141,7 @@ Examples:
   otelcconfig resolve  examples/nethttp.yaml
   otelcconfig explain  request_captured_headers
   otelcconfig catalog
+  otelcconfig bake    --output baked --check examples/demo.yaml
 
 Docs: https://github.com/ADITYA-CODE-SOURCE/otelcconfig
 `)+"\n")

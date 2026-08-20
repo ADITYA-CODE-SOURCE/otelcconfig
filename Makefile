@@ -1,7 +1,7 @@
 # Copyright The otelcconfig Authors
 # SPDX-License-Identifier: Apache-2.0
 
-.PHONY: all build test test-race coverage lint vet fmt fmt-check tidy tidy-check generate generate-check check clean help
+.PHONY: all build test test-race coverage lint vet fmt fmt-check tidy tidy-check generate generate-check bake bake-check check demo-run clean help
 
 MODULE := github.com/ADITYA-CODE-SOURCE/otelcconfig
 BIN    := otelcconfig
@@ -59,7 +59,16 @@ generate: ## Regenerate committed artifacts from behavior manifests
 generate-check: ## Fail if committed artifacts drift from behavior manifests
 	$(GO) run ./cmd/otelcconfig generate --check
 
-check: fmt-check tidy-check vet test generate-check build ## Run non-mutating format, module, vet, test, generate drift, and build checks
+bake: ## Freeze resolved examples/demo.yaml configuration into the baked package
+	$(GO) run ./cmd/otelcconfig bake --output baked examples/demo.yaml
+
+bake-check: ## Fail if committed baked package drifts from examples/demo.yaml
+	$(GO) run ./cmd/otelcconfig bake --output baked --check examples/demo.yaml
+
+demo-run: bake ## Build and run the end-to-end demo binary
+	$(GO) run ./cmd/demo
+
+check: fmt-check tidy-check vet test generate-check bake-check build ## Run non-mutating format, module, vet, test, generate drift, bake drift, and build checks
 	@echo "✓ check passed"
 
 clean: ## Remove build artifacts

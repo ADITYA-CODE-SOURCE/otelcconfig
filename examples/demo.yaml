@@ -1,0 +1,18 @@
+# Configuration baked into the cmd/demo demonstration binary.
+#
+# The demo exercises the enabled net/http client instrumentation: it captures
+# request headers and redacts sensitive query parameters, all driven by this
+# file through `otelcconfig bake` and the runtime package.
+instrumentation:
+  development:
+    general:
+      http:
+        client:
+          request_captured_headers: ["user-agent", "x-request-id"]
+      sanitization:
+        url:
+          sensitive_query_parameters: ["token"]
+    go:
+      nethttp:
+        client:
+          enabled: true

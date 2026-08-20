@@ -73,9 +73,10 @@ jobs:
           ./otelcconfig resolve examples/nethttp.yaml
           ./otelcconfig explain request_captured_headers
           ./otelcconfig catalog
+          ./otelcconfig bake --output baked --check examples/demo.yaml
           # Planned commands must fail honestly
-          if ./otelcconfig bake; then
-            echo "bake should not succeed before Phase 3"
+          if ./otelcconfig guard; then
+            echo "guard should not succeed before Phase 4"
             exit 1
           fi
 

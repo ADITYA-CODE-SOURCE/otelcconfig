@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-08-19
+
+### Added
+
+- `runtime` package: frozen, resolved configuration accessors for hooks
+  (`runtime.NetHTTPClient()`); accessors return deep copies and panic with a clear
+  message when a binary was built without the baked package
+- `bake` package: freezes resolved configuration into a Go package (`baked/`) plus
+  a JSON audit file; deterministic for identical manifest + config + env
+- `otelcconfig bake <file>` command with `--manifest`, `--output`, and `--check`
+  (drift detection); committed `baked/` is drift-gated in `make check` and CI
+- `demo` package: net/http client hook modeled on otelc's `client_hook.go` enabler
+  pattern — captures configured request headers and redacts sensitive query
+  parameters, driven entirely by baked runtime configuration (no SDK dependency)
+- `cmd/demo` binary and an end-to-end integration test that builds and runs it,
+  asserting the exact behavior prescribed by `examples/demo.yaml`
+- `examples/demo.yaml`: the configuration baked into the demo binary
+- RFC `docs/rfc/0001-declarative-instrumentation-configuration.md` and
+  ADR-0003 (bake configuration at build time)
+- `make bake`, `make bake-check`, and `make demo-run` targets
+
+### Changed
+
+- `bake` is no longer a stub; only `guard` and `diff` remain "not implemented"
+- CLI help, README, and architecture docs updated for Phase 3; the runtime
+  contract is implemented rather than planned
+- CI CLI smoke now runs `bake --check` against `examples/demo.yaml`
+
+### Notes
+
+- Phase 3 release. Production hooks consume only frozen values; the per-machine
+  env flow exists only in validation/resolution tooling.
+- Next: Phase 4 — static-analysis guard and config diff (`v0.5.0`).
+
 ## [0.3.0] — 2026-08-19
 
 ### Added
@@ -98,7 +132,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Phase 0 only. No configuration loading, code generation, or resolution yet.
 - Next: Phase 1 — behavior manifest and deterministic code generation (`v0.2.0`).
 
-[Unreleased]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/compare/v0.1.0...v0.1.1

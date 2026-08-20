@@ -53,9 +53,13 @@ from that declaration:
 | `manifest` | Parse and validate behavior manifests | 1 |
 | `codegen` | Deterministic generators | 1 |
 | `generated` | Committed, golden-tested outputs | 1 |
-| `config` | Load, substitute, validate, resolve, typed runtime | 2–3 |
-| `cmd/otelcconfig` | CLI entrypoint | 0+ |
+| `config` | Load, substitute, validate, resolve | 2 |
+| `runtime` | Baked configuration accessors for hooks | 3 |
+| `bake` | Freeze resolved config into a Go package | 3 |
+| `baked` | Committed, drift-gated frozen configuration | 3 |
 | `demo` | net/http end-to-end proof | 3 |
+| `cmd/otelcconfig` | CLI entrypoint | 0+ |
+| `cmd/demo` | End-to-end demo binary | 3 |
 | `internal/yamlutil` | Shared YAML helpers | 1+ |
 | `internal/guard` | Static analysis (stretch) | 4 |
 
@@ -78,12 +82,12 @@ Per otelc ADR-0005 and Issue #705:
 
 Selection mechanisms (`.otel.yml`, tool files) are out of scope.
 
-## Runtime contract (planned)
+## Runtime contract (implemented in Phase 3)
 
 Hooks read configuration only through a typed API. They never:
 
 - Open or parse YAML at runtime
-- Call `os.Getenv` for option values directly (compat env vars are resolved once)
+- Call `os.Getenv` for option values directly (compat env vars are resolved once at bake time)
 - Access stringly-typed undeclared paths
 
 This matches the Issue #705 design note:
@@ -91,8 +95,15 @@ This matches the Issue #705 design note:
 > otelc parses and validates the config at build time and bakes the resolved
 > values into the instrumented binary. The hooks never touch YAML.
 
-Phase 3 models bake-in as a standalone `otelcconfig bake` command. It is **not**
-wired into otelc's `-toolexec` pipeline.
+The `runtime` package implements the accessor side: `otelcconfig bake` freezes the
+resolved configuration into a generated package that registers a `ConfigSnapshot`
+at init; hooks such as the `demo` enabler read frozen values through
+`runtime.NetHTTPClient()`. Accessors return deep copies so hooks cannot mutate the
+shared snapshot, and they panic with a clear message when a binary was built
+without importing the baked package.
+
+`otelcconfig bake` is standalone; it is **not** wired into otelc's `-toolexec`
+pipeline.
 
 ## Official keys used in the first instrumentation
 
@@ -110,7 +121,29 @@ Compatibility env vars (existing otelc surface only in MVP):
 
 ## Phase status
 
-### Phase 2 (v0.3.0, current)
+### Phase 3 (v0.4.0, current)
+
+Completes the supply chain from declarative YAML to typed runtime hooks:
+
+- **`bake` package + `otelcconfig bake`** — freezes resolved values (including
+  `OTEL_GO_*` env overrides) into a Go package (`baked/`) plus a JSON audit file.
+  Deterministic for identical manifest + config + env; `--check` fails on drift.
+  Committed `baked/` is regenerated from `examples/demo.yaml` and drift-gated in
+  `make check` and CI.
+- **`runtime` package** — the typed accessor layer hooks consume; hooks import it
+  and never parse YAML. Accessors return deep copies; they panic if no snapshot
+  was baked in.
+- **`demo` package + `cmd/demo`** — an end-to-end net/http demonstration modeled on
+  otelc's `client_hook.go` enabler pattern (no SDK dependency): captured request
+  headers become observation attributes and sensitive query parameters are
+  redacted, driven entirely by the baked configuration. An integration test builds
+  and runs the binary and asserts the configured behavior.
+- **RFC 0001** — `docs/rfc/0001-declarative-instrumentation-configuration.md`
+  records the mechanism, alternatives, and open questions.
+- **ADR-0003** — bake-at-build-time with the local (per-machine) env flow reserved
+  for tooling only.
+
+### Phase 2 (v0.3.0, done)
 
 The `config` package implements the load/substitute/validate/resolve half of the
 pipeline over the generated schema:
@@ -127,9 +160,9 @@ pipeline over the generated schema:
   `OTEL_GO_ENABLED_INSTRUMENTATIONS` compatibility surface, and report each value's
   source for transparency
 
-CLI: `validate`, `resolve`, `explain`, `catalog`. Phase 1 local flow (per-machine
-local precedence) stays unchanged — Phase 3 bakes engine values into the binary so
-Phase 1 precedence can be removed.
+CLI: `validate`, `resolve`, `explain`, `catalog`. The per-machine local env flow in
+validation/resolution tooling remains; production hooks consume only frozen values
+via `runtime`, so local env cannot change a baked binary's behavior.
 
 ### Phase 1 (v0.2.0, done)
 
@@ -139,5 +172,5 @@ fragment for the `instrumentation/development` shape, and a Markdown catalog.
 Committed outputs under `generated/` are golden-tested and CI fails on drift via
 `generate --check`.
 
-Phase 3 will add the typed runtime package and `bake`. See the README roadmap for
-subsequent phases.
+Phase 4 will add the go/analysis guard (`guard`) and config comparison (`diff`).
+See the README roadmap for the stretch phase.

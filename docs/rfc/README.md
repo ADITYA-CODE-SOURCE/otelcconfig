@@ -2,15 +2,13 @@
 
 Architectural RFCs for `otelcconfig` live here.
 
-The primary document will be added in Phase 3:
+Active documents:
 
-- `0001-declarative-instrumentation-configuration.md`
+- [0001-declarative-instrumentation-configuration.md](0001-declarative-instrumentation-configuration.md) —
+  the per-instrumentation declarative configuration mechanism demonstrated by this
+  prototype (manifest → codegen → validate/resolve → bake → runtime hooks)
 
-That RFC will record the mechanism design, alternatives considered, and open
-questions for the LFX Term 3 mentee working on
-[otelc#705](https://github.com/open-telemetry/opentelemetry-go-compile-instrumentation/issues/705).
-
-Until Phase 3, see:
+See also:
 
 - [docs/architecture.md](../architecture.md)
 - [docs/adr/](../adr/)
