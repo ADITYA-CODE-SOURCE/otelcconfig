@@ -1,0 +1,26 @@
+{
+  "instrumentation": "nethttp.client",
+  "options": [
+    {
+      "path": "go.nethttp.client.enabled",
+      "value": true,
+      "source": "file",
+      "env_var": "OTEL_GO_ENABLED_INSTRUMENTATIONS"
+    },
+    {
+      "path": "general.http.client.request_captured_headers",
+      "value": [
+        "user-agent",
+        "x-request-id"
+      ],
+      "source": "file"
+    },
+    {
+      "path": "general.sanitization.url.sensitive_query_parameters",
+      "value": [
+        "token"
+      ],
+      "source": "file"
+    }
+  ]
+}

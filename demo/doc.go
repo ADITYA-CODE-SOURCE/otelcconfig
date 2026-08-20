@@ -1,13 +1,15 @@
 // Copyright The otelcconfig Authors
 // SPDX-License-Identifier: Apache-2.0
 
-// Package demo will host an end-to-end net/http instrumentation demonstration
-// that consumes typed runtime configuration produced by otelcconfig.
+// Package demo is an end-to-end proof that instrumentation hooks consume typed,
+// baked runtime configuration and never parse YAML. See docs/rfc/0001 and
+// docs/architecture.md for the mechanism.
 //
-// Phase 0: package stub only.
-// Phase 3: hook modelled on otelc's
-// instrumentation/net/http/client/client_hook.go enabler pattern, with tests
-// for header capture and query-parameter redaction.
+// The hook models otelc's instrumentation/net/http/client/client_hook.go enabler
+// pattern without the OpenTelemetry SDK: Client wraps an http.RoundTripper so
+// requests are observed according to the baked configuration (captured headers,
+// sensitive query redaction). cmd/demo imports the generated baked package and
+// demonstrates the full supply chain.
 //
 // This package is a proof of mechanism. It is not part of otelc and does not
 // integrate with otelc's -toolexec pipeline.
