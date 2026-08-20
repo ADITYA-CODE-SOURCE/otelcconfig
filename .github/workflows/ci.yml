@@ -74,11 +74,9 @@ jobs:
           ./otelcconfig explain request_captured_headers
           ./otelcconfig catalog
           ./otelcconfig bake --output baked --check examples/demo.yaml
-          # Planned commands must fail honestly
-          if ./otelcconfig guard; then
-            echo "guard should not succeed before Phase 4"
-            exit 1
-          fi
+          ./otelcconfig guard ./demo ./runtime ./baked ./cmd/demo
+          ./otelcconfig diff examples/minimal.yaml examples/minimal.yaml
+          ./otelcconfig validate examples/demo.yaml
 
   lint:
     name: Lint

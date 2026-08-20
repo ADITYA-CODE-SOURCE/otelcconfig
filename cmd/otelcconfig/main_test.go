@@ -85,18 +85,6 @@ func TestRunUnknown(t *testing.T) {
 	}
 }
 
-func TestRunNotImplemented(t *testing.T) {
-	for _, cmd := range []string{"guard", "diff"} {
-		code, stdout, stderr := runCommand(cmd)
-		if code != 1 {
-			t.Fatalf("%s exit code = %d, want 1", cmd, code)
-		}
-		if stdout != "" || !strings.Contains(stderr, "not implemented (planned:") {
-			t.Fatalf("%s stdout=%q stderr=%q", cmd, stdout, stderr)
-		}
-	}
-}
-
 func TestRunReportsOutputFailure(t *testing.T) {
 	var stderr bytes.Buffer
 	if code := run([]string{"version"}, failingWriter{}, &stderr); code != 1 {
@@ -127,31 +115,5 @@ func TestRunHandlesUnknownCommandUsageFailure(t *testing.T) {
 	stderr := &failOnWrite{fail: 2}
 	if code := run([]string{"nope"}, &bytes.Buffer{}, stderr); code != 1 {
 		t.Fatalf("unknown with failing usage exit code = %d, want 1", code)
-	}
-}
-
-func TestRunHandlesNotImplementedOutputFailure(t *testing.T) {
-	if code := run([]string{"guard"}, &bytes.Buffer{}, failingWriter{}); code != 1 {
-		t.Fatalf("guard with failing stderr exit code = %d, want 1", code)
-	}
-
-	stderr := &failOnWrite{fail: 2}
-	if code := run([]string{"guard"}, &bytes.Buffer{}, stderr); code != 1 {
-		t.Fatalf("guard with failing second write exit code = %d, want 1", code)
-	}
-}
-
-func TestPhaseFor(t *testing.T) {
-	cases := map[string]string{
-		"generate": "Phase 1 (v0.2.0)",
-		"validate": "Phase 2 (v0.3.0)",
-		"bake":     "Phase 3 (v0.4.0)",
-		"guard":    "Phase 4 (v0.5.0)",
-		"other":    "a later phase",
-	}
-	for cmd, want := range cases {
-		if got := phaseFor(cmd); got != want {
-			t.Errorf("phaseFor(%q) = %q, want %q", cmd, got, want)
-		}
 	}
 }
