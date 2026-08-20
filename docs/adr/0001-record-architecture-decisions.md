@@ -9,7 +9,7 @@
 `otelcconfig` explores a non-trivial configuration mechanism related to
 OpenTelemetry Go Compile Instrumentation Issue #705. Design choices around
 manifest format, code generation, precedence, and runtime APIs will evolve.
-Without a written record, later contributors (and LFX reviewers) cannot tell
+Without a written record, later contributors cannot tell
 *why* a decision was made or which alternatives were rejected.
 
 The upstream otelc project records significant decisions as ADRs under

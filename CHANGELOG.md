@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] — 2026-08-20
+
+### Changed
+
+- Reworked README into a finished-project walkthrough: "What it proves", a
+  "Try it in 60 seconds" section with real demo output, and a complete roadmap;
+  removed application-oriented positioning text
+- Guard violations summary is now written to stdout alongside the diagnostics
+  (consistent with result output); internal guard errors no longer duplicate the
+  `guard:` command prefix
+- CLI help documents `diff` exit codes inline
+- Docs: fixed RFC cross-links to ADRs, corrected the architecture diagram to
+  the dependency-free `go/ast` analyzer, marked Phase 4 done, and added
+  `docs/demo.md` walkthrough
+- Removed LFX / mentorship references from README, CHANGELOG, RFC, and ADRs in
+  favor of neutral Issue #705 positioning
+
 ## [0.5.0] — 2026-08-19
 
 ### Added
@@ -138,7 +155,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added race-detector and pinned golangci-lint checks
 - Made `make check` non-mutating and added module-tidiness verification
 - Strengthened CLI tests to assert stdout, stderr, and exit status
-- Clarified honest LFX resume wording and independent contributor status
+- Clarified independent-prototype wording and contributor expectations
 
 ## [0.1.0] — 2026-08-03
 
@@ -146,7 +163,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Project foundation: Go module `github.com/ADITYA-CODE-SOURCE/otelcconfig`
 - Apache-2.0 license and SPDX headers
-- README with independent-prototype disclaimer and LFX Issue #705 positioning
+- README with independent-prototype disclaimer and Issue #705 positioning
 - ADR-0001 (record architecture decisions) and ADR-0002 (adopt OTel declarative config node)
 - Architecture overview document
 - CLI skeleton (`version`, `help`) with honest "not implemented" stubs for later commands

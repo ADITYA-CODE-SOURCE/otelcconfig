@@ -36,8 +36,8 @@ func TestRunGuardFlagsViolations(t *testing.T) {
 	if !strings.Contains(stdout, "must not parse YAML at runtime") {
 		t.Errorf("guard stdout missing yaml diagnostic:\n%s", stdout)
 	}
-	if !strings.Contains(stderr, "violation(s)") {
-		t.Errorf("guard stderr = %q", stderr)
+	if !strings.Contains(stdout, "violation(s)") {
+		t.Errorf("guard stdout missing summary = %q", stdout)
 	}
 }
 

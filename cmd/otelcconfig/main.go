@@ -99,6 +99,7 @@ Commands:
   bake        Freeze resolved configuration into a Go package   <file>
   guard       Reject undeclared configuration access            <dir...>
   diff        Compare two configuration files                   <file> <file>
+              exit 0 identical, 1 differences, 2 usage error
 
 Generate flags:
   --manifest <dir>   Behavior manifests directory (default ./manifest)
