@@ -3,9 +3,9 @@
 
 // Command otelcconfig is the CLI entrypoint for the otelcconfig toolkit.
 //
-// Phase 3 implements generate, validate, resolve, explain, catalog, and bake;
-// remaining commands are honest stubs for later phases. See
-// docs/architecture.md for the full roadmap.
+// Phase 4 implements every planned command: generate, validate, resolve,
+// explain, catalog, bake, guard, and diff. See docs/architecture.md for the
+// full roadmap.
 package main
 
 import (
@@ -51,8 +51,10 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return runCatalog(rest, stdout, stderr)
 	case "bake":
 		return runBake(rest, stdout, stderr)
-	case "diff", "guard":
-		return notImplemented(cmd, rest, stderr)
+	case "diff":
+		return runDiff(rest, stdout, stderr)
+	case "guard":
+		return runGuard(rest, stdout, stderr)
 	default:
 		if _, err := fmt.Fprintf(stderr, "unknown command %q\n\n", cmd); err != nil {
 			return 1
@@ -62,16 +64,6 @@ func run(args []string, stdout, stderr io.Writer) int {
 		}
 		return 2
 	}
-}
-
-func notImplemented(cmd string, _ []string, stderr io.Writer) int {
-	if _, err := fmt.Fprintf(stderr, "command %q is not implemented (planned: %s)\n", cmd, phaseFor(cmd)); err != nil {
-		return 1
-	}
-	if _, err := fmt.Fprintln(stderr, "See docs/architecture.md and the README roadmap."); err != nil {
-		return 1
-	}
-	return 1
 }
 
 func writeUsage(stdout, stderr io.Writer) int {
@@ -84,21 +76,6 @@ func writeUsage(stdout, stderr io.Writer) int {
 
 func reportWriteError(stderr io.Writer, err error) {
 	_, _ = fmt.Fprintf(stderr, "write output: %v\n", err)
-}
-
-func phaseFor(cmd string) string {
-	switch cmd {
-	case "generate":
-		return "Phase 1 (v0.2.0)"
-	case "validate", "resolve", "explain", "catalog":
-		return "Phase 2 (v0.3.0)"
-	case "bake":
-		return "Phase 3 (v0.4.0)"
-	case "guard", "diff":
-		return "Phase 4 (v0.5.0)"
-	default:
-		return "a later phase"
-	}
 }
 
 func printUsage(w io.Writer) error {
@@ -119,11 +96,9 @@ Commands:
   resolve     Show resolved values and their sources          <file>
   explain     Explain one configuration option                <option-or-path>
   catalog     List all configurable options
-  bake        Freeze resolved configuration into a Go package             <file>
-
-Planned (not implemented):
-  guard       Reject undeclared configuration access                    [Phase 4]
-  diff        Compare two configuration files                           [Phase 4]
+  bake        Freeze resolved configuration into a Go package   <file>
+  guard       Reject undeclared configuration access            <dir...>
+  diff        Compare two configuration files                   <file> <file>
 
 Generate flags:
   --manifest <dir>   Behavior manifests directory (default ./manifest)
@@ -142,6 +117,8 @@ Examples:
   otelcconfig explain  request_captured_headers
   otelcconfig catalog
   otelcconfig bake    --output baked --check examples/demo.yaml
+  otelcconfig guard   ./demo ./runtime ./baked
+  otelcconfig diff    examples/minimal.yaml examples/nethttp.yaml
 
 Docs: https://github.com/ADITYA-CODE-SOURCE/otelcconfig
 `)+"\n")

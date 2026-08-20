@@ -1,7 +1,7 @@
 # Copyright The otelcconfig Authors
 # SPDX-License-Identifier: Apache-2.0
 
-.PHONY: all build test test-race coverage lint vet fmt fmt-check tidy tidy-check generate generate-check bake bake-check check demo-run clean help
+.PHONY: all build test test-race coverage lint vet fmt fmt-check tidy tidy-check generate generate-check bake bake-check guard-check check demo-run clean help
 
 MODULE := github.com/ADITYA-CODE-SOURCE/otelcconfig
 BIN    := otelcconfig
@@ -68,7 +68,10 @@ bake-check: ## Fail if committed baked package drifts from examples/demo.yaml
 demo-run: bake ## Build and run the end-to-end demo binary
 	$(GO) run ./cmd/demo
 
-check: fmt-check tidy-check vet test generate-check bake-check build ## Run non-mutating format, module, vet, test, generate drift, bake drift, and build checks
+guard-check: ## Fail if hook packages access configuration outside the baked runtime API
+	$(GO) run ./cmd/otelcconfig guard ./demo ./runtime ./baked ./cmd/demo
+
+check: fmt-check tidy-check vet test generate-check bake-check guard-check build ## Run non-mutating format, module, vet, test, generate drift, bake drift, guard, and build checks
 	@echo "✓ check passed"
 
 clean: ## Remove build artifacts

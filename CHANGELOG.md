@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-08-19
+
+### Added
+
+- `internal/guard` static analyzer (import/name-based, no new dependencies):
+  rejects undeclared configuration access in hook packages — `runtime.Register`
+  outside generated baked code, option values read from the environment, and YAML
+  parsing in hooks
+- `otelcconfig guard <dir...>` command: `path:line:col: message` diagnostics,
+  exit 1 on violations
+- `otelcconfig diff a.yaml b.yaml` command: resolves both files and prints one
+  `!` line per changed option value; exit 0 identical, 1 differences, 2 usage
+  error (mirrors `diff`(1))
+- ADR-0004 (static guard) and upgraded README/architecture phase coverage
+
+### Changed
+
+- `guard` and `diff` are no longer stubs; every planned command is now
+  implemented and the "not implemented" stub path was removed from the CLI
+- `make guard-check` runs the analyzer over `./demo ./runtime ./baked ./cmd/demo`;
+  added to `make check`; CI smoke now runs `guard` and `diff`
+
+### Notes
+
+- Phase 4 release. All roadmap phases (0–4) are delivered.
+- The analyzer is deliberately name/import-based for zero dependencies; a
+  go/types pass (x/tools) is the documented upgrade path upstream.
+
 ## [0.4.0] — 2026-08-19
 
 ### Added
@@ -132,7 +160,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Phase 0 only. No configuration loading, code generation, or resolution yet.
 - Next: Phase 1 — behavior manifest and deterministic code generation (`v0.2.0`).
 
-[Unreleased]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/ADITYA-CODE-SOURCE/otelcconfig/compare/v0.1.1...v0.2.0

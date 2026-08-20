@@ -34,7 +34,7 @@ func runBake(args []string, stdout, stderr io.Writer) int {
 	if !ok {
 		return 1
 	}
-	dev, ok := loadDevelopment(fs.Arg(0), manifests, stderr)
+	dev, ok := loadDevelopment("bake", fs.Arg(0), manifests, stderr)
 	if !ok {
 		return 1
 	}
@@ -68,30 +68,30 @@ func runBake(args []string, stdout, stderr io.Writer) int {
 
 // loadDevelopment reads, parses, substitutes, and validates a configuration
 // file, returning the validated instrumentation.development node.
-func loadDevelopment(path string, manifests []*manifest.Manifest, stderr io.Writer) (any, bool) {
+func loadDevelopment(cmd, path string, manifests []*manifest.Manifest, stderr io.Writer) (any, bool) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		reportError(stderr, "bake", err)
+		reportError(stderr, cmd, err)
 		return nil, false
 	}
 	doc, err := config.Parse(data)
 	if err != nil {
-		reportError(stderr, "bake", err)
+		reportError(stderr, cmd, err)
 		return nil, false
 	}
 	dev, err := config.Substitute(doc.Development, os.LookupEnv)
 	if err != nil {
-		reportError(stderr, "bake", err)
+		reportError(stderr, cmd, err)
 		return nil, false
 	}
 	validators, err := config.Validators(manifests)
 	if err != nil {
-		reportError(stderr, "bake", err)
+		reportError(stderr, cmd, err)
 		return nil, false
 	}
 	for _, m := range manifests {
 		if verr := validators[m.Instrumentation.Name].Validate(dev); verr != nil {
-			reportError(stderr, "bake", verr)
+			reportError(stderr, cmd, verr)
 			return nil, false
 		}
 	}

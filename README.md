@@ -11,7 +11,7 @@ Declarative Configuration Toolkit for [otelc](https://github.com/open-telemetry/
 [![CI](https://github.com/ADITYA-CODE-SOURCE/otelcconfig/actions/workflows/ci.yml/badge.svg)](https://github.com/ADITYA-CODE-SOURCE/otelcconfig/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Go Reference](https://pkg.go.dev/badge/github.com/ADITYA-CODE-SOURCE/otelcconfig.svg)](https://pkg.go.dev/github.com/ADITYA-CODE-SOURCE/otelcconfig)
-[![Status](https://img.shields.io/badge/status-phase%203%20runtime-blue)](https://github.com/ADITYA-CODE-SOURCE/otelcconfig/releases)
+[![Status](https://img.shields.io/badge/status-phase%204%20complete-blue)](https://github.com/ADITYA-CODE-SOURCE/otelcconfig/releases)
 
 ## What this project is
 
@@ -69,8 +69,8 @@ Issue #705 proposes adopting the OpenTelemetry
 | 0 — Foundation | `v0.1.1` | Done |
 | 1 — Manifest + codegen | `v0.2.0` | Done |
 | 2 — Validate + resolve | `v0.3.0` | Done |
-| 3 — Typed runtime demo + RFC | `v0.4.0` | **Current** |
-| 4 — Static-analysis guard | `v0.5.0` | Stretch |
+| 3 — Typed runtime demo + RFC | `v0.4.0` | Done |
+| 4 — Static-analysis guard | `v0.5.0` | **Current** |
 
 Phase 1 shipped the first behavior manifest (`manifest/nethttp/metadata.yaml`) and a
 deterministic code-generation pipeline. `otelcconfig generate` derives typed structs,
@@ -85,7 +85,7 @@ Validation is strict: unknown keys outside the declared `go:` subtree are reject
 and `${ENV:-default}`-style references are resolved so unresolved environments fail
 early at build time.
 
-Phase 3 (current) proves the full supply chain. `otelcconfig bake` freezes resolved
+Phase 3 proved the full supply chain. `otelcconfig bake` freezes resolved
 configuration into a Go package (`baked/`) that registers it with the `runtime`
 package at init; instrumentation hooks consume the typed runtime API and never
 parse YAML. The `demo` package models otelc's net/http client enabler pattern, and
@@ -93,25 +93,34 @@ parse YAML. The `demo` package models otelc's net/http client enabler pattern, a
 captured headers and redacted query parameters, asserted by an integration test.
 The mechanism is documented in [RFC 0001](docs/rfc/0001-declarative-instrumentation-configuration.md).
 
-> **Resume status:** Phase 3 is now a complete, tested end-to-end demonstration of
-> the mechanism — configurable from YAML, validated, resolved, baked, and consumed
-> by hooks without runtime parsing. `otelcconfig` can be described as a substantial
-> LFX project. Remaining roadmap value sits in the Phase 4 static-analysis guard
-> and any upstream RFC discussion.
+Phase 4 (current) closes the roadmap. `otelcconfig guard` is a static analyzer
+that rejects undeclared configuration access in hook packages — `runtime.Register`
+outside generated baked code, option values read from the environment, and YAML
+parsing in hooks — enforced on the repo itself by `make guard-check` and CI.
+`otelcconfig diff` compares two configuration files by resolved engine value
+(exit code mirrors `diff`(1)). Together they make the typed runtime API the only
+legitimate access path, verifiable at CI time.
 
-## Quick start (Phase 3)
+> **Resume status:** Phase 4 makes the mechanism fully self-checking: hooks can
+> only read baked configuration, enforced by an analyzer with zero new
+> dependencies, plus a config comparison command. `otelcconfig` is a complete
+> demonstration of the Issue #705 mechanism with all roadmap phases delivered.
+
+## Quick start (Phase 4)
 
 ```bash
 git clone https://github.com/ADITYA-CODE-SOURCE/otelcconfig.git
 cd otelcconfig
 make check
-make build VERSION=v0.4.0
+make build VERSION=v0.5.0
 ./otelcconfig version
 go run ./cmd/otelcconfig validate examples/nethttp.yaml  # validate a config
 go run ./cmd/otelcconfig resolve  examples/nethttp.yaml  # final values + sources
 go run ./cmd/otelcconfig explain  request_captured_headers
 go run ./cmd/otelcconfig catalog
 go run ./cmd/otelcconfig bake --output baked --check examples/demo.yaml  # verify baked pkg current
+go run ./cmd/otelcconfig guard ./demo ./runtime ./baked              # reject undeclared access
+go run ./cmd/otelcconfig diff examples/minimal.yaml examples/nethttp.yaml
 make demo-run                                                     # bake + run the demo
 go run ./cmd/otelcconfig generate       # regenerate derived artifacts
 go run ./cmd/otelcconfig generate --check  # verify committed artifacts are current
@@ -132,13 +141,8 @@ otelcconfig resolve    # Phase 2 — show final engine values and their sources
 otelcconfig explain    # Phase 2 — explain one option (path or short name)
 otelcconfig catalog    # Phase 2 — list all options (optionally filtered by instrumentation)
 otelcconfig bake       # Phase 3 — freeze resolved config into a Go package (--check for drift)
-```
-
-Planned (later phases):
-
-```text
-otelcconfig guard      # Phase 4 — reject undeclared config access
-otelcconfig diff       # Phase 4 — compare two configs
+otelcconfig guard      # Phase 4 — reject undeclared config access in hook dirs
+otelcconfig diff       # Phase 4 — compare two configs by resolved value (0 same, 1 different)
 ```
 
 ## Architecture overview
@@ -150,6 +154,7 @@ Key decisions are recorded as ADRs under [docs/adr/](docs/adr/):
 - [ADR-0001](docs/adr/0001-record-architecture-decisions.md) — Record architecture decisions
 - [ADR-0002](docs/adr/0002-adopt-otel-declarative-config-node.md) — Adopt OTel declarative config node
 - [ADR-0003](docs/adr/0003-bake-at-build-time.md) — Bake configuration at build time
+- [ADR-0004](docs/adr/0004-static-guard.md) — Static guard for undeclared config access
 
 ## Relationship to otelc
 
